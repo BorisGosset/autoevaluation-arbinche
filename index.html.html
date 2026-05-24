@@ -1,0 +1,2507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autoévaluation - Sciences humaines - 1ère secondaire</title>
+    <!-- Utilisation de Tailwind CSS pour un design moderne, aéré et professionnel -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Style sur mesure pour les boutons radios de l'échelle de Likert */
+        .likert-radio {
+            width: 1.35rem;
+            height: 1.35rem;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        .likert-radio:hover {
+            transform: scale(1.2);
+        }
+        /* Animation de surbrillance/clignotement pour guider l'élève ou l'enseignant */
+        @keyframes pulse-highlight {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: #fef3c7; border-color: #f59e0b; }
+        }
+        .row-highlight {
+            animation: pulse-highlight 2s ease-in-out 3;
+        }
+    </style>
+
+    <!-- SDK Firebase Compat pour une stabilité maximale dans l'environnement d'aperçu -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen pb-16 text-slate-850 antialiased overflow-x-hidden">
+
+    <!-- LIGNE TRICOLORE AR BINCHE / FW-B EN HAUT DE PAGE -->
+    <div class="h-2 w-full flex">
+        <div class="bg-red-600 flex-1"></div>
+        <div class="bg-amber-400 flex-1"></div>
+        <div class="bg-blue-700 flex-1"></div>
+    </div>
+
+    <!-- BARRE DE NAVIGATION ET SÉLECTEUR DE RÔLE -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo & Titre officiel basé sur AR Binche et le référentiel de la FWB -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-blue-700 text-white p-2.5 rounded-xl shadow-md shadow-blue-200 flex space-x-0.5 select-none">
+                        <span class="text-red-500 font-black">A</span>
+                        <span class="text-amber-400 font-black">R</span>
+                        <span class="text-white font-black">B</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">
+                            Autoévaluation <span class="text-blue-700">—</span> Sc. Humaines
+                        </h1>
+                        <p class="text-xs text-slate-500 font-semibold">AR Binche • Référentiel FWB (1<sup>ère</sup> Sec. / S1)</p>
+                    </div>
+                </div>
+
+                <!-- Sélecteur de rôle Élève / Enseignant (Sécurisé par code PIN) -->
+                <div class="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shrink-0 select-none">
+                    <button id="role-eleve" onclick="window.changerRole('eleve')" class="flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 bg-white text-blue-700 shadow-sm">
+                        <svg class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        <span>Espace Élève</span>
+                    </button>
+                    <button id="role-prof" onclick="window.demanderCodeAcces()" class="flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 text-slate-600 hover:text-slate-900">
+                        <svg class="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>
+                        <span>Espace Enseignant 🔒</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
+
+        <!-- FICHE D'IDENTITÉ DE L'ÉLÈVE -->
+        <div class="bg-white rounded-3xl border border-slate-200 p-6 mb-8 shadow-sm" id="bloc-identification">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center">
+                <svg class="h-4 w-4 mr-2 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Fiche d'identification de l'élève
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2">Nom de l'élève</label>
+                    <input type="text" id="eleve-nom" oninput="window.sauvegarderIdentite()" placeholder="Ex: Dupont" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2">Prénom de l'élève</label>
+                    <input type="text" id="eleve-prenom" oninput="window.sauvegarderIdentite()" placeholder="Ex: Thomas" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2">Classe / Groupe</label>
+                    <input type="text" id="eleve-classe" oninput="window.sauvegarderIdentite()" placeholder="Ex: 1A" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                </div>
+            </div>
+        </div>
+
+        <!-- ZONE ENSEIGNANT : TABLEAU DE BORD (Visible uniquement pour le prof, fond clair moderne) -->
+        <div id="teacher-dashboard" class="bg-gradient-to-b from-blue-50/70 to-slate-100/40 border-2 border-blue-100/85 text-slate-900 rounded-3xl p-6 mb-8 shadow-sm hidden">
+            
+            <!-- 1. ENTÊTE DU DASHBOARD AVEC TITRE -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-5 border-b border-slate-200/80 gap-3">
+                <div>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-blue-700 flex items-center">
+                        <span class="inline-block h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse mr-2"></span>
+                        Tableau de bord Enseignant
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5 font-semibold">
+                        Gérez, évaluez et visualisez les productions de vos classes de 1ère secondaire en temps réel.
+                    </p>
+                </div>
+                <div class="text-[11px] font-bold text-blue-800 bg-blue-100/65 px-3 py-1.5 rounded-lg border border-blue-200/50">
+                    PIN Actif ✓
+                </div>
+            </div>
+
+            <!-- BOÎTE DE RÉCEPTION POUR CHARGER LES DOSSIERS JSON REÇUS PAR TEAMS -->
+            <div class="mb-6 bg-amber-50/70 rounded-2xl p-5 border border-amber-200 shadow-sm text-slate-800">
+                <h4 class="text-xs font-extrabold text-amber-800 uppercase tracking-wider flex items-center mb-2">
+                    <svg class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Méthode Teams : Charger une auto-évaluation élève (.json)
+                </h4>
+                <p class="text-xs text-slate-600 mb-3">
+                    Si vos élèves ont téléchargé le fichier HTML sur leur ordinateur, ils ont généré un fichier <strong>.json</strong> à la fin. Glissez-déposez ou sélectionnez leur fichier ci-dessous pour l'analyser directement.
+                </p>
+                <div class="flex items-center justify-center w-full">
+                    <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-amber-300 rounded-xl cursor-pointer bg-white hover:bg-amber-50/40 transition-colors">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <p class="text-xs font-bold text-amber-700">Cliquez ici pour sélectionner le fichier .json reçu de l'élève</p>
+                            <p class="text-[10px] text-slate-400 mt-1">Accepte les fichiers d'auto-évaluation générés par l'application</p>
+                        </div>
+                        <input type="file" id="import-json-file" accept=".json" class="hidden" onchange="window.importerFichierJSON(event)" />
+                    </label>
+                </div>
+            </div>
+
+            <!-- 2. SECTION LISTE DES ÉLÈVES (PLACÉE EN PREMIER) -->
+            <div class="mb-6 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center">
+                        <svg class="h-4 w-4 mr-1.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Élèves ayant encodé et envoyé leur autoévaluation :
+                    </h4>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="student-list-container">
+                    <!-- Les boutons d'élèves connectés s'affichent ici -->
+                </div>
+            </div>
+
+            <!-- 2.5 Aperçu global de l'auto-évaluation par couleur de l'élève sélectionné -->
+            <div id="diagnostic-panel" class="mb-6 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hidden">
+                <h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center mb-3">
+                    <svg class="h-4 w-4 mr-1.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    Aperçu global de l'auto-évaluation de <span id="diagnostic-student-name" class="text-blue-700 ml-1 font-black">l'élève</span> :
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="diagnostic-cards-container">
+                    <!-- Les fiches de couleur par matière s'injectent ici par JS -->
+                </div>
+            </div>
+
+            <!-- CONSIGNE D'ACTION TRÈS VISUELLE POUR ACCÉDER À LA LISTE DÉROULANTE -->
+            <div id="teacher-interactive-guide" class="mb-6 bg-blue-50 border border-blue-200/80 rounded-2xl p-4 text-xs text-blue-800 flex items-start space-x-3 shadow-sm hidden">
+                <div class="bg-blue-100 text-blue-700 p-2 rounded-xl shrink-0">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-extrabold text-blue-900 uppercase tracking-wide">💡 Comment évaluer un attendu et donner un feed-back ?</p>
+                    <p class="mt-1 leading-relaxed font-medium">
+                        Pour attribuer des remarques individuelles, cochez simplement le bouton **« Saisir »** (ou « Validé ») dans la colonne **Enseignant** sur la ligne d'un attendu ci-dessous. Un **volet de correction coulissant va s'ouvrir sur la droite** avec les listes déroulantes d'accords et de commentaires automatiques.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ZONE D'EXPLICATION DYNAMIQUE SELON LE RÔLE -->
+        <div id="zone-explication" class="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-950 text-white rounded-3xl p-8 mb-8 shadow-xl shadow-blue-100 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-red-600/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+            <div class="absolute bottom-0 right-10 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl -mb-10"></div>
+            
+            <div class="relative z-10 w-full">
+                <span id="badge-explication" class="bg-white/15 text-amber-300 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-white/10">
+                    Auto-évaluation formative • AR Binche
+                </span>
+                <h2 id="titre-explication" class="text-2xl sm:text-3xl font-extrabold mt-3 mb-2">Prends le contrôle de tes apprentissages ! 🚀</h2>
+                
+                <!-- Les 4 étapes guidées et visuelles pour l'élève -->
+                <div id="etapes-eleve-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                    <!-- Étape 1 -->
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-black text-sm mb-3 shadow-md">1</div>
+                            <h4 class="font-bold text-sm text-amber-300">Choisis ta matière</h4>
+                            <p class="text-xs text-blue-100 mt-1.5 leading-relaxed">Clique sur l'une des 3 disciplines ci-dessous (Histoire 📜, Géo 🌍 ou Éco 💳👥).</p>
+                        </div>
+                    </div>
+                    <!-- Étape 2 -->
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="w-8 h-8 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-black text-sm mb-3 shadow-md">2</div>
+                            <h4 class="font-bold text-sm text-amber-300">Remplis les 3 onglets</h4>
+                            <p class="text-xs text-blue-100 mt-1.5 leading-relaxed">Dans ta matière, coche tes réponses dans les sections <strong>Savoirs</strong>, <strong>Savoir-faire</strong> et <strong>Compétences</strong>.</p>
+                        </div>
+                    </div>
+                    <!-- Étape 3 -->
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-black text-sm mb-3 shadow-md">3</div>
+                            <h4 class="font-bold text-sm text-amber-300">Fais les autres matières</h4>
+                            <p class="text-xs text-blue-100 mt-1.5 leading-relaxed">Une fois terminé, sélectionne la matière suivante et fais exactement le même travail.</p>
+                        </div>
+                    </div>
+                    <!-- Étape 4 -->
+                    <div class="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col justify-between">
+                        <div>
+                            <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm mb-3 shadow-md animate-bounce">4</div>
+                            <h4 class="font-bold text-sm text-amber-300">Envoie au professeur !</h4>
+                            <p class="text-xs text-blue-100 mt-1.5 leading-relaxed">Quand tout est complété, descends tout en bas et clique sur <strong>"J'ai terminé mon auto-évaluation !"</strong></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Texte d'explication de rechange pour l'Espace Professeur (haut contraste, sans blanc sur blanc) -->
+                <p id="texte-explication" class="text-slate-100 text-sm md:text-base leading-relaxed hidden font-semibold bg-slate-900/60 p-4 rounded-2xl border border-slate-700/50 mt-4">
+                    Complète d'abord tes informations d'identification ci-dessus. Sélectionne ta discipline, puis navigue entre les onglets **Savoirs**, **Savoir-faire** et **Compétences** pour compléter la totalité de ton évaluation. Ton professeur y aura immédiatement accès !
+                </p>
+            </div>
+        </div>
+
+        <!-- FILTRES DE SÉLECTION (MATIÈRES) -->
+        <div class="bg-white rounded-3xl border border-slate-200 p-6 mb-8 shadow-sm">
+            <span class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Discipline d'évaluation (1ère Sec. / S1)</span>
+            <div class="grid grid-cols-3 gap-3" id="matiere-selector-container">
+                <!-- Généré par JS -->
+            </div>
+        </div>
+
+        <!-- SYSTÈME D'ONGLETS S-SF-C -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-3 mb-8 shadow-sm flex flex-col sm:flex-row gap-2">
+            <button id="tab-Savoir" onclick="window.selectionnerCategorie('Savoir')" class="flex-1 flex items-center justify-center space-x-2 py-4 px-6 rounded-2xl text-sm font-extrabold transition-all duration-150 bg-red-50 text-red-600 border-2 border-red-200">
+                <svg class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                <span>1. Savoirs (Connaissances)</span>
+            </button>
+            <button id="tab-Savoir-faire" onclick="window.selectionnerCategorie('Savoir-faire')" class="flex-1 flex items-center justify-center space-x-2 py-4 px-6 rounded-2xl text-sm font-extrabold transition-all duration-150 text-slate-600 hover:bg-slate-50">
+                <svg class="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                <span>2. Savoir-faire (Méthodes)</span>
+            </button>
+            <button id="tab-Compétence" onclick="window.selectionnerCategorie('Compétence')" class="flex-1 flex items-center justify-center space-x-2 py-4 px-6 rounded-2xl text-sm font-extrabold transition-all duration-150 text-slate-600 hover:bg-slate-50">
+                <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                <span>3. Compétences (Intégration)</span>
+            </button>
+        </div>
+
+        <!-- ZONE DE LÉGENDE DE L'ÉCHELLE DE LIKERT -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 mb-8 shadow-sm">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-blue-700 mb-3 flex items-center font-bold">
+                Légende de ton auto-évaluation (Échelle d'acquisition)
+            </h3>
+            <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+                Lis attentivement chaque attendu de la matière dans la colonne de gauche, puis coche une seule case au centre pour indiquer ton niveau d'acquisition :
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex items-start p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-950">
+                    <span class="inline-block w-3 h-3 rounded-full bg-red-600 mt-1 shrink-0"></span>
+                    <div class="ml-2.5">
+                        <p class="text-xs font-extrabold">Non Acquis (Rouge)</p>
+                        <p class="text-[11px] opacity-80 mt-0.5">Je rencontre de grandes difficultés, j'ai absolument besoin d'aide.</p>
+                    </div>
+                </div>
+                <div class="flex items-start p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-950">
+                    <span class="inline-block w-3 h-3 rounded-full bg-amber-500 mt-1 shrink-0"></span>
+                    <div class="ml-2.5">
+                        <p class="text-xs font-extrabold">En Voie d'acquisition (Orange)</p>
+                        <p class="text-[11px] opacity-80 mt-0.5">Je commence à comprendre mais je fais encore des fautes ou j'oublie des détails.</p>
+                    </div>
+                </div>
+                <div class="flex items-start p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-950">
+                    <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 mt-1 shrink-0"></span>
+                    <div class="ml-2.5">
+                        <p class="text-xs font-extrabold">Acquis (Vert)</p>
+                        <p class="text-[11px] opacity-80 mt-0.5">Je maîtrise parfaitement et je sais l'expliquer ou le faire seul.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ZONE D'AFFICHAGE DU TABLEAU D'ÉVALUATION LIKERT -->
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/70 border-b border-slate-200">
+                            <th id="titre-liste-rubriques" class="p-5 text-xs font-extrabold uppercase tracking-wider text-slate-500 w-1/2">Savoirs à évaluer (Connaissances)</th>
+                            <th class="p-5 text-xs font-extrabold uppercase tracking-wider text-red-600 text-center w-[10%]">Non Acquis</th>
+                            <th class="p-5 text-xs font-extrabold uppercase tracking-wider text-amber-600 text-center w-[10%]">En Voie</th>
+                            <th class="p-5 text-xs font-extrabold uppercase tracking-wider text-emerald-600 text-center w-[10%]">Acquis</th>
+                            <th class="p-5 text-xs font-extrabold uppercase tracking-wider text-slate-500 text-center w-[20%]">Enseignant</th>
+                        </tr>
+                    </thead>
+                    <tbody id="competences-table-body">
+                        <!-- Lignes de tableau injectées dynamiquement par JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ZONE DE VALIDATION FINALE ÉLÈVE : BOUTON J'AI TERMINÉ ! -->
+        <div id="zone-validation-eleve" class="bg-white rounded-3xl border border-slate-200 p-6 mb-8 shadow-sm">
+            <h4 class="text-sm font-bold text-slate-900 mb-2">Prêt à envoyer ton travail ?</h4>
+            <p class="text-xs text-slate-500 mb-4">Quand tu as complété tous les onglets (Savoirs, Savoir-faire, Compétences) pour tes cours, clique ci-dessous pour l'envoyer directement sur l'ordinateur du professeur.</p>
+            <button id="btn-termine" onclick="window.marquerCommeTermine()" class="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-blue-100 transition-all flex items-center justify-center space-x-2">
+                <svg class="h-5 w-5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                <span>J'ai terminé mon auto-évaluation ! 🚀</span>
+            </button>
+        </div>
+
+        <!-- REPOSITIONNÉ À LA FIN : ZONE DE COMMENTAIRE ET BILAN GÉNÉRAL DE L'ENSEIGNANT -->
+        <div id="bloc-commentaire-general-prof" class="mb-6 bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                <h4 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center">
+                    <svg class="h-4 w-4 mr-1.5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Bilan global & Commentaire de synthèse de l'enseignant :
+                </h4>
+                <!-- Bouton de génération automatique basé sur les statistiques -->
+                <button onclick="window.genererBilanAutomatique()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold py-1.5 px-3 rounded-xl shadow-sm transition-all flex items-center space-x-1 shrink-0">
+                    <svg class="h-3.5 w-3.5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span>🪄 Générer un bilan automatique</span>
+                </button>
+            </div>
+            <div>
+                <textarea id="prof-commentaire-general" oninput="window.enregistrerCommentaireGeneral(this.value)" rows="4" placeholder="Ce commentaire général apparaîtra à la fin de la fiche Word de l'élève. Vous pouvez le saisir manuellement ou cliquer sur le bouton d'analyse automatique pour obtenir une base rédigée..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-semibold rounded-xl p-4 focus:ring-2 focus:ring-blue-500 focus:bg-white leading-relaxed"></textarea>
+            </div>
+        </div>
+
+        <!-- REPOSITIONNÉ À LA FIN : SECTION EXPORTATION ET ARCHIVAGE DE LA CLASSE -->
+        <div id="bloc-export-prof" class="bg-blue-50 rounded-3xl p-5 border border-blue-200/60 flex flex-col sm:flex-row items-center justify-between gap-4 hidden shadow-sm">
+            <div class="text-left">
+                <h4 class="text-xs font-extrabold text-blue-900 uppercase tracking-wider">Extraction et archivage de la classe</h4>
+                <p class="text-[11px] text-slate-500 font-medium mt-1">Exportez un rapport récapitulatif Excel pour l'administration ou téléchargez la fiche individuelle Word de l'élève actif.</p>
+            </div>
+            <div class="flex flex-wrap gap-2 shrink-0">
+                <button onclick="window.exporterExcelCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center space-x-1.5">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    <span>📊 Exporter Classe (Excel)</span>
+                </button>
+                <button id="btn-export-word" onclick="window.exporterWordDoc()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center space-x-1.5 opacity-50 cursor-not-allowed" disabled>
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    <span id="text-export-word">Fiche Élève (Word)</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ARRIÈRE-PLAN DESACTIF QUAND LE TIROIR EST OUVERT (BACKDROP) -->
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 hidden transition-opacity duration-300 opacity-0" onclick="window.fermerSidebarCorrection()"></div>
+
+        <!-- TIROIR DE CORRECTION LATÉRAL (DRAWER COULISSANT DEPUIS LA DROITE) -->
+        <div id="correction-sidebar" class="fixed inset-y-0 right-0 w-full sm:w-[460px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out hidden flex flex-col border-l border-slate-200">
+            
+            <!-- Tête du tiroir -->
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="bg-blue-100 text-blue-700 p-2 rounded-xl">
+                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black text-slate-900 leading-tight">Évaluation formative</h4>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Rétroaction de l'enseignant</p>
+                    </div>
+                </div>
+                <button onclick="window.fermerSidebarCorrection()" class="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-xl transition-all">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <!-- Contenu défilant -->
+            <div class="p-6 overflow-y-auto flex-grow space-y-5">
+                
+                <!-- Rappel de l'attendu évalué -->
+                <div class="bg-slate-50 border border-slate-200/60 p-4 rounded-2xl">
+                    <span class="text-[9px] font-black uppercase text-slate-400 bg-white border border-slate-200 px-2 py-0.5 rounded-md">Attendu d'apprentissage ciblé</span>
+                    <p id="correction-target-title" class="text-xs text-slate-800 font-bold mt-2.5 leading-relaxed"></p>
+                </div>
+                
+                <!-- 1. ACCORD ENSEIGNANT -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">1. Accord avec l'évaluation de l'élève :</label>
+                    <div class="relative">
+                        <select id="sidebar-agreement-select" onchange="window.adapterAccordEnseignant(this.value)" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:bg-white appearance-none transition-all cursor-pointer">
+                            <option value="">-- Non spécifié --</option>
+                            <option value="d_accord">D'accord avec l'élève</option>
+                            <option value="desaccord_surevalue">Pas d'accord (Élève surévalué ⚠)</option>
+                            <option value="desaccord_sous_estime">Pas d'accord (Élève sous-estimé ↗)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. BOUTONS DE VALIDATION DIRECTS DU NIVEAU EFFECTIF -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">2. Niveau d'acquisition validé :</label>
+                    <div class="flex space-x-2">
+                        <button id="prof-btn-non_acquis" onclick="window.selectionnerProfEvalDirect('non_acquis')" class="flex-1 py-3 px-3 bg-white text-slate-700 hover:bg-red-50 hover:text-red-700 border border-slate-200 text-[11px] font-bold rounded-xl transition-all">Non Acquis</button>
+                        <button id="prof-btn-en_voie" onclick="window.selectionnerProfEvalDirect('en_voie')" class="flex-1 py-3 px-3 bg-white text-slate-700 hover:bg-amber-50 hover:text-amber-700 border border-slate-200 text-[11px] font-bold rounded-xl transition-all">En Voie</button>
+                        <button id="prof-btn-acquis" onclick="window.selectionnerProfEvalDirect('acquis')" class="flex-1 py-3 px-3 bg-white text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 border border-slate-200 text-[11px] font-bold rounded-xl transition-all">Acquis</button>
+                    </div>
+                </div>
+
+                <!-- 3. SÉLECTEUR DE COMMENTAIRE AUTOMATIQUE ADAPTATIF -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">3. Suggestions de feed-back automatique :</label>
+                    <div class="relative">
+                        <select id="sidebar-template-select" onchange="window.appliquerCommentaireSidebar(this.value)" class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:bg-white appearance-none transition-all cursor-pointer">
+                            <option value="" disabled selected>-- Choisir un feed-back rapide --</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. ZONE DE TEXTE LIBRE POUR AFFINER LE COMMENTAIRE -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide">4. Ajuster le commentaire personnalisé :</label>
+                    <textarea id="sidebar-comment-area" oninput="window.enregistrerProfCommentDepuisSidebar(this.value)" rows="4" placeholder="Modifiez le commentaire automatique appliqué ou tapez directement votre remarque bienveillante ici..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:bg-white leading-relaxed"></textarea>
+                </div>
+
+            </div>
+
+            <!-- Pied du tiroir -->
+            <div class="p-6 border-t border-slate-100 bg-slate-50 flex space-x-3 shrink-0">
+                <button onclick="window.fermerSidebarCorrection()" class="w-full py-3 bg-blue-700 hover:bg-blue-800 text-white text-xs font-black rounded-xl transition-all shadow-md shadow-blue-100 text-center">
+                    Enregistrer et fermer ✓
+                </button>
+            </div>
+        </div>
+
+        <!-- TOAST NOTIFICATION DE SUCCÈS -->
+        <div id="notification-toast" class="fixed bottom-6 right-6 bg-slate-950 text-white px-6 py-4 rounded-2xl shadow-2xl translate-y-24 opacity-0 transition-all duration-300 flex items-center space-x-3 pointer-events-none z-50 border border-slate-800">
+            <div class="bg-emerald-500/20 text-emerald-400 p-1.5 rounded-lg">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+            </div>
+            <span id="notification-text" class="text-sm font-bold">Modifications enregistrées</span>
+        </div>
+
+        <!-- MODAL DE SÉCURITÉ : CODE PIN POUR L'ESPACE ENSEIGNANT -->
+        <div id="pin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-200">
+                <div class="text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 text-blue-700 mb-4">
+                        <svg class="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-950">Accès Enseignant Sécurisé</h3>
+                    <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                        Pour modifier les évaluations et ajouter des commentaires, veuillez saisir le code d'accès de sécurité de l'établissement.
+                    </p>
+                </div>
+                <div class="mt-6">
+                    <input type="password" id="pin-input" placeholder="Saisir le code PIN..." class="w-full text-center bg-slate-50 border border-slate-200 text-lg font-bold rounded-xl p-3 focus:ring-2 focus:ring-blue-500 tracking-widest">
+                </div>
+                <div class="mt-6 flex space-x-3">
+                    <button type="button" onclick="window.fermerPinModal()" class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
+                        Annuler
+                    </button>
+                    <button type="button" id="btn-valider-pin" onclick="window.validerPin()" class="flex-1 py-3 px-4 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-100 transition-all">
+                        Valider
+                    </button>
+                </div>
+                <div id="pin-error" class="text-red-600 text-xs font-bold text-center mt-3 hidden">
+                    Code PIN incorrect. Veuillez réessayer (PIN d'accès : 1234).
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE CHECKLIST INTERACTIVE DE VALIDATION AVANT ENVOI -->
+        <div id="checklist-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col flex-grow">
+                <!-- Tête du modal -->
+                <div class="text-center pb-4 border-b border-slate-100">
+                    <h3 class="text-lg font-extrabold text-slate-900 flex items-center justify-center gap-2">
+                        <span>Vérification de ton auto-évaluation</span>
+                        <span id="checklist-percentage-badge" class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-black">0%</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                        Chaque attendu de chaque matière doit être complété avant d'envoyer la copie au professeur.
+                    </p>
+                </div>
+
+                <!-- Jauge de progression visuelle -->
+                <div class="mt-4">
+                    <div class="flex justify-between text-xs font-bold text-slate-600 mb-1.5">
+                        <span>Progression globale :</span>
+                        <span id="checklist-progress-text">0 / 0 complétés</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-3.5 rounded-full overflow-hidden border border-slate-200/50">
+                        <div id="checklist-progress-bar" class="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Zone défilante de la Checklist par matière -->
+                <div class="mt-5 overflow-y-auto flex-grow pr-1 space-y-4" id="checklist-body-scroller">
+                    <!-- Généré par JavaScript : Éléments complétés et surtout les manquants -->
+                </div>
+
+                <!-- Messages d'avertissement et Actions de validation -->
+                <div class="mt-5 pt-4 border-t border-slate-100">
+                    <div id="checklist-warning-box" class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 mb-4 flex items-start gap-2.5">
+                        <svg class="h-5 w-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div class="text-xs">
+                            <p class="font-extrabold" id="warning-box-title">Auto-évaluation incomplète</p>
+                            <p class="opacity-90 mt-0.5 leading-relaxed" id="warning-box-text">Certains critères n'ont pas encore été cochés. Si ton professeur t'a demandé de ne remplir qu'une partie, tu peux envoyer ton travail dès maintenant ! Sinon, tu peux cliquer sur un élément rouge pour le compléter.</p>
+                        </div>
+                    </div>
+
+                    <div id="checklist-success-box" class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 mb-4 hidden flex items-start gap-2.5">
+                        <svg class="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="text-xs">
+                            <p class="font-extrabold">Bravo, ton auto-évaluation est complète ! ✨</p>
+                            <p class="opacity-90 mt-0.5 leading-relaxed">Toutes les cases ont été cochées. Tu es prêt à transmettre ton travail à ton professeur.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-3">
+                        <button type="button" onclick="window.fermerChecklistModal()" class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
+                            Retour
+                        </button>
+                        <button type="button" id="checklist-btn-submit" onclick="window.confirmerEnvoiFinal()" class="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all">
+                            Confirmer et envoyer 🚀
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODULE DE CONFIGURATION ET DE COMPORTEMENT GLOBAL SANS RETARD DE MODULE -->
+    <script>
+        // Déclaration des variables de configuration
+        var auth, db, appId, currentUser = null;
+        var defaultAppId = "ar-binche-sc-humaines";
+        var cacheListeEleves = {};
+
+        // Backup local de l'élève actif pour le test dans le même navigateur
+        window.myOwnStudentData = {
+            identite: { nom: '', prenom: '', classe: '' },
+            donnees: {},
+            commentaireGeneral: '',
+            termine: false
+        };
+
+        // --- ATTENDUS OFFICIELS EXHAUSTIFS DE 1ÈRE SECONDAIRE (S1) ---
+        const BASE_EVALUATIONS = {
+            histoire: {
+                Savoir: [
+                    { id: 'h-s1', description: "Nommer et dater quatre moments de rupture qui ont marqué l’histoire du fait religieux.", vulgarisation: "Connaître et donner les dates des 4 grands changements de l'histoire des religions étudiés en classe." },
+                    { id: 'h-s2', description: "Associer les moments clés aux périodes conventionnelles.", vulgarisation: "Savoir relier un événement important à sa grande période historique (Antiquité, Moyen Âge, Temps Modernes, Époque Contemporaine)." },
+                    { id: 'h-s3', description: "Énoncer des points communs et des différences entre des religions de l’Antiquité.", vulgarisation: "Pouvoir comparer des religions anciennes (ex: égyptienne, grecque, romaine) pour dire ce qui se ressemble et ce qui change." },
+                    { id: 'h-s4', description: "Différencier polythéisme et monothéisme.", vulgarisation: "Expliquer clairement la différence entre croire en plusieurs dieux (polythéisme) et croire en un seul dieu (monothéisme)." },
+                    { id: 'h-s5', description: "Énoncer des changements légaux sur le plan des convictions religieuses et philosophiques induits par l’Édit de Constantin et/ou l’Édit de Théodose.", vulgarisation: "Expliquer comment les lois de l'Empire romain ont changé avec ces édits (le droit de pratiquer sa religion librement, puis le christianisme devenu la seule religion officielle)." },
+                    { id: 'h-s6', description: "Exemplifier l’influence que la Chrétienté et l’Islam médiévaux exercent sur la vie quotidienne et sur l’art.", vulgarisation: "Donner des exemples de l'influence de la religion sur la vie des gens au Moyen Âge (les fêtes, les repas, la prière) et dans l'architecture (les églises, les mosquées, les peintures)." },
+                    { id: 'h-s7', description: "Exemplifier des apports réciproques, des cohabitations pacifiques et des conflits entre les chrétiens, les juifs et les musulmans au Moyen Àge.", vulgarisation: "Donner des exemples de moments de paix, de partages de connaissances (sciences, médecine) mais aussi de guerres (les Croisades) entre ces trois groupes religieux au Moyen Âge." },
+                    { id: 'h-s8', description: "Expliquer une controverse à propos des pratiques religieuses entre l’Église catholique et les théories de Luther.", vulgarisation: "Expliquer la dispute historique entre l'Église catholique et Martin Luther (ex: la vente des indulgences pour aller au paradis)." },
+                    { id: 'h-s9', description: "Expliquer des changements induits par la Constitution sur le plan des convictions religieuses et philosophiques.", vulgarisation: "Expliquer comment la Constitution belge de 1831 a changé les règles (liberté de culte, liberté d'opinion, séparation entre l'Église et l'État)." },
+                    { id: 'h-s10', description: "Associer un repère temporel au moment clé correspondant et à la période conventionnelle correspondante.", vulgarisation: "Relier une date clé de l'histoire des religions à son moment clé et à sa grande période de l'histoire." },
+                    { id: 'h-s11', description: "Dater les repères temporels.", vulgarisation: "Retenir et savoir écrire de mémoire les dates clés importantes étudiées en classe." },
+                    { id: 'h-s12', description: "Expliquer le caractère relatif du découpage du temps (era chrétienne/era musulmane).", vulgarisation: "Montrer que le calendrier n'est pas le même partout (le calendrier chrétien commence à la naissance de Jésus, le calendrier musulman commence avec l'Hégire en 622)." },
+                    { id: 'h-s13', description: "Lier un savoir culturel à un moment clé et à une période conventionnelle.", vulgarisation: "Associer une œuvre d'art, un livre sacré ou un monument au bon moment de l'histoire." }
+                ],
+                'Savoir-faire': [
+                    { id: 'h-sf1', description: "Lire un(e) tableau/frise chronologique pour mettre en évidence une antériorité, une simultanéité, une postériorité entre deux phénomènes.", vulgarisation: "Regarder une ligne du temps et dire si un événement s'est passé 'avant' (antériorité), 'en même temps' (simultanéité) ou 'après' (postériorité) un autre." },
+                    { id: 'h-sf2', description: "Mesurer la durée d’un phénomène sur un(e) tableau/frise chronologique.", vulgarisation: "Calculer combien d'années ou de siècles a duré un événement ou une période historique en lisant la ligne du temps." },
+                    { id: 'h-sf3', description: "Distinguer sur un(e) tableau/frise chronologique des évènements et des phénomènes.", vulgarisation: "Différencier une date précise (un événement court, ex: un traité) d'une longue période (un phénomène long, ex: la christianisation de l'Europe)." },
+                    { id: 'h-sf4', description: "Graduer en millénaires une frise chronologique selon une échelle mesurée.", vulgarisation: "Dessiner une ligne du temps propre et la diviser correctement en tranches de 1000 ans (millénaires) à l'aide de ta latte." },
+                    { id: 'h-sf5', description: "Justifier la pertinence d’une page internet par rapport à une question de recherche.", vulgarisation: "Expliquer pourquoi un site internet est fiable et utile pour répondre à une question d'histoire sans faire de hors-sujet." },
+                    { id: 'h-sf6', description: "Sélectionner une information en référence à un repère temporel, une thématique en recourant à un portail numérique.", vulgarisation: "Trouver une information d'histoire précise sur un site ou encyclopédie en ligne (comme Vikidia) en tapant des mots-clés." },
+                    { id: 'h-sf7', description: "Distinguer la date de production d’un document de la date ou de la période évoquée dans ce document.", vulgarisation: "Faire la différence entre le moment où le texte a été écrit (ex: un livre de 2024) et l'époque dont il parle (ex: la vie de Jules César en -44)." },
+                    { id: 'h-sf8', description: "Identifier, dans un texte court, une cause et une conséquence explicite d’un fait ou d’un changement.", vulgarisation: "Repérer dans un texte d'histoire 'pourquoi' quelque chose s'est passé (la cause) et 'ce que cela a provoqué' (la conséquence)." },
+                    { id: 'h-sf9', description: "Comparer deux documents de nature différente pour identifier des ressemblances et des différences.", vulgarisation: "Analyser deux documents (ex: un texte et une œuvre d'art) pour écrire ce qui est identique et ce qui diffère." },
+                    { id: 'h-sf10', description: "Sélectionner dans un document des informations utiles pour répondre à une question de recherche.", vulgarisation: "Surligner et recopier uniquement les phrases d'un texte historique qui t'aident à répondre à ta question d'histoire." },
+                    { id: 'h-sf11', description: "Organiser dans un tableau à double entrée des informations sélectionnées dans un document.", vulgarisation: "Ranger des informations historiques dans un tableau propre avec des lignes et des colonnes bien nommées." }
+                ],
+                'Compétence': [
+                    { id: 'h-c1', description: "Compléter une frise chronologique du IVe millénaire av. J.-C. à nos jours par des traces ou des informations relatives à la thématique de l’année, le début de l’era chrétienne et les périodes conventionnelles et construire le plan d’un court texte explicatif, en mobilisant des repères temporels significatifs et des termes pour caractériser ces repères.", vulgarisation: "Placer correctement des dates et périodes clés sur une frise géante (de l'Antiquité à aujourd'hui) et préparer les grandes parties d'un résumé en écrivant des mots-repères." },
+                    { id: 'h-c2', description: "Sélectionner dans un corpus documentaire donné, un document pertinent par rapport à une problématique en lien avec l’histoire du fait religieux et justifier ce choix.", vulgarisation: "Choisir le meilleur document parmi un groupe de fiches pour répondre à une question sur les religions, et expliquer par écrit pourquoi tu as choisi celui-là." },
+                    { id: 'h-c3', description: "Sur la base de documents traitant de l’histoire du fait religieux, construire un tableau à double entrée pour inscrire une reality d’aujourd’hui dans une perspective historique et l’annoter en expliquant des continuités, des changements, en mobilisant des repères temporels significatifs et un vocabulaire temporel spécifique.", vulgarisation: "Faire un tableau pour comparer une habitude d'aujourd'hui avec celle du passé, et écrire de courtes remarques pour montrer ce qui est resté pareil et ce qui a changé." }
+                ]
+            },
+            geographie: {
+                Savoir: [
+                    { id: 'g-s1', description: "Citer des activités humaines responsables de la déforestation.", vulgarisation: "Donner des exemples d'activités des hommes qui causent la destruction des forêts (ex: élevage de bétail, culture de soja, exploitation de bois ou routes)." },
+                    { id: 'g-s2', description: "Citer des occupations du sol caractéristiques du processus d'urbanisation et d'étalement urbain.", vulgarisation: "Nommer ce qui montre que la ville s'agrandit sur la campagne (ex: création de nouveaux lotissements de maisons, centres commerciaux, routes, parkings)." },
+                    { id: 'g-s3', description: "Décrire un exemple de l'évolution de l'occupation du sol qui illustre un effet positif ou négatif de l'évolution des espaces sur l'environnement (aménagement du territoire, bétonisation, perte de biodiversité, augmentation des émissions de gaz à effet de serre...).", vulgarisation: "Expliquer avec tes mots comment la construction d'infrastructures détruit la nature (bétonisation des sols qui empêche l'eau de s'infiltrer, disparition des animaux, pollution) ou l'aide (création de parcs naturels)." },
+                    { id: 'g-s4', description: "Décrire ce qu'est la croissance démographique (mouvement naturel et mouvement migratoire).", vulgarisation: "Expliquer pourquoi la population mondiale ou d'une ville augmente (mouvement naturel = plus de naissances que de décès ; mouvement migratoire = arrival de nouveaux habitants venant d'autres pays)." },
+                    { id: 'g-s5', description: "Décrire des occupations du sol caractéristiques des mutations agricoles (culture sous serre, taille des parcelles, parc d'engraissement, ceintures vertes).", vulgarisation: "Décrire les paysages créés par l'agriculture moderne (grandes serres en plastique ou en verre, immenses champs sans haies, enclos pour nourrir beaucoup d'animaux)." },
+                    { id: 'g-s6', description: "Décrire/donner un exemple d'évolution de l'occupation du sol qui illustre un effet positif ou négatif de l'évolution de l'occupation des espaces.", vulgarisation: "Donner un exemple précis montrant comment un paysage a changé et quelles en sont les conséquences pour les habitants." },
+                    { id: 'g-s7', description: "Dire en quelques mots ce qu'est un facteur de localisation.", vulgarisation: "Expliquer pourquoi une usine, une ville ou un commerce s'est installé à un endroit précis plutôt qu'un autre (ex: près d'un cours d'eau, d'une autoroute ou d'une forêt)." },
+                    { id: 'g-s8', description: "Distinguer en quelques mots les espaces qui composent la ville (centre-ville - banlieue - périphérie récente).", vulgarisation: "Expliquer la différence entre le vieux centre historique, les quartiers de maisons résidentielles autour (banlieue) et les zones de commerces plus éloignées (périphérie)." },
+                    { id: 'g-s9', description: "Donner un exemple d'espace marqué par : un étalement urbain, une mutation agricole ou la déforestation.", vulgarisation: "Citer un lieu du monde réel étudié en classe pour chaque problème (ex: la forêt d'Amazonie pour la déforestation)." },
+                    { id: 'g-s10', description: "Expliquer des liens entre les indicateurs socioéconomiques (travail, argent, conditions de vie...) des populations et l'évolution de l'urbanisation.", vulgarisation: "Montrer le rapport entre le fait que les gens s'installent en ville et leur besoin de trouver un emploi ou d'accéder à de meilleures écoles et hôpitaux." },
+                    { id: 'g-s11', description: "Expliquer pourquoi une activity agricole s'est installée à un endroit en se basant sur les facteurs de localisation (humains et naturels).", vulgarisation: "Expliquer pourquoi un champ se trouve là (facteur naturel = soleil, eau, terre plate ; facteur humain = présence de routes pour transporter les récoltes ou de clients à proximité)." },
+                    { id: 'g-s12', description: "Caractériser l'occupation du sol d'un space déforesté.", vulgarisation: "Décrire ce qu'on trouve à la place des arbres coupés (ex: des champs de soja ou des pâturages pour vaches)." },
+                    { id: 'g-s13', description: "Caractériser un paysage agricole en référence à l'évolution de l'occupation du sol.", vulgarisation: "Faire le portrait d'un paysage de ferme (ex: de grands champs ouverts sans arbres vs de petits champs entourés de haies)." },
+                    { id: 'g-s14', description: "Donner un exemple d'un facteur de localisation humain ou naturel d'une activité ou de l'habitat.", vulgarisation: "Citer un élément naturel (ex: la présence d'un fleuve) ou humain (ex: la construction d'une ligne de chemin de fer) qui a poussé les hommes à construire leurs maisons à cet endroit." }
+                ],
+                'Savoir-faire': [
+                    { id: 'g-sf1', description: "Annoter une vue verticale pour mettre en évidence l'évolution de l'occupation du sol.", vulgarisation: "Écrire des légendes claires sur une photo satellite d'un paysage pris du ciel pour montrer les zones de nature et de constructions." },
+                    { id: 'g-sf2', description: "Associer l'emploi de symboles et/ou de couleurs différentes à des données qualitatives ou quantitatives.", vulgarisation: "Choisir les bonnes couleurs (ex: vert pour les forêts, rouge pour les habitations) ou tailles de ronds pour représenter des informations sur une carte." },
+                    { id: 'g-sf3', description: "Lire et annoter une image géographique pour mettre en évidence l'évolution de l'occupation du sol.", vulgarisation: "Étudier un paysage (photo ou carte) et placer des flèches pour indiquer les changements visibles du paysage." },
+                    { id: 'g-sf4', description: "Lire une information quantitative sur la base de la légende d'un document.", vulgarisation: "Trouver des nombres exacts (ex: nombre d'habitants) en lisant attentivement la légende d'une carte ou d'un graphique." },
+                    { id: 'g-sf5', description: "Relever des distances et surfaces à l'aide d'un portail numérique.", vulgarisation: "Utiliser un outil en ligne (ex: Google Maps ou WalOnMap) pour mesurer des longueurs en mètres ou des superficies de forêts coupées." },
+                    { id: 'g-sf6', description: "Relever une distance à l'aide d'un portail numérique.", vulgarisation: "Calculer la distance en kilomètres entre deux points sur une carte numérique." },
+                    { id: 'g-sf7', description: "Situer un endroit marqué par l'occupation d'un espace en utilisant des repères connus ou identifiés sur une carte.", vulgarisation: "Décrire la position d'une ville ou d'une forêt en utilisant des repères (ex: 'au nord de Bruxelles, le long du canal')." },
+                    { id: 'g-sf8', description: "Relever/citer des effets positifs ou négatifs de l'évolution de l'occupation des espaces sur l'environnement.", vulgarisation: "Faire la liste des bonnes ou mauvaises conséquences écologiques après la modification d'un paysage." },
+                    { id: 'g-sf9', description: "Illustrer par un exemple un espace marqué par un processus d'urbanisation et d'étalement urbain (exemple: Londres).", vulgarisation: "Utiliser l'exemple d'une grande ville du monde réel pour prouver qu'elle dévore sa campagne périphérique." }
+                ],
+                'Compétence': [
+                    { id: 'g-c1', description: "Réaliser un croquis cartographique pour mettre en évidence une évolution de l'occupation du sol (à partir d'une image géographique).", vulgarisation: "Dessiner un croquis simplifié avec des aplats de couleurs et des figurés pour résumer comment un paysage a changé entre deux époques." }
+                ]
+            },
+            eco_sociale: {
+                Savoir: [
+                    { id: 'es-s1', description: "Exemplifier le lien qui existe entre offre, d’une part, et demande et prix, d’autre part.", vulgarisation: "Donner un exemple pour montrer comment le prix change en fonction de l'offre et de la demande (ex: si des baskets sont rares et très demandées, leur prix augmente ; s'il y en a trop et que personne n'en veut, leur prix baisse)." },
+                    { id: 'es-s2', description: "Exemplifier des facteurs qui influencent l’offre et la demande.", vulgarisation: "Donner des exemples de ce qui pousse les commerçants à vendre plus ou moins, ou les acheteurs à consommer (ex: la publicité, les tendances de mode, la saison, le budget des familles)." },
+                    { id: 'es-s3', description: "Identifier les variations du prix d’équilibre dans des cas concrets de rencontre entre l’offre et la demande.", vulgarisation: "Trouver le juste prix où le vendeur et l'acheteur se mettent d'accord pour que toute la marchandise soit vendue." },
+                    { id: 'es-s4', description: "Identifier des modes de présentation de soi et de relation aux autres dans l’espace numérique et leurs effets sur soi et sur les autres.", vulgarisation: "Reconnaître comment on choisit de se montrer sur Internet (photos de profil parfaites, filtres de retouche) et comprendre l'impact (jalousie, perte de confiance en soi, harcèlement, popularité fictive)." },
+                    { id: 'es-s5', description: "Identifier des règles qui encadrent/limitent des pratiques virtuelles.", vulgarisation: "Connaître les lois et règles sur les réseaux sociaux (ex: limite d'âge de 13 ans pour s'inscrire, interdiction de partager des photos de camarades sans accord, règles contre la cyberintimidation)." },
+                    { id: 'es-s6', description: "Expliquer en quoi les réseaux sociaux peuvent contribuer à la fois au renforcement des liens sociaux et à l’exclusion sociale.", vulgarisation: "Expliquer comment les réseaux sociaux (TikTok, Instagram...) nous aident à garder le contact avec nos amis de loin, mais peuvent aussi exclure quelqu'un s'il est rejeté d'un groupe ou insulté." },
+                    { id: 'es-s7', description: "Identifier le pouvoir qu’exercent des influenceurs au travers de pratiques numériques.", vulgarisation: "Comprendre et repérer comment des influenceurs (sur YouTube, Instagram, TikTok) nous poussent à acheter une marque de boisson ou de vêtement au travers de leurs vidéos." },
+                    { id: 'es-s8', description: "Identifier des influences sur l’organisation de la vie sociale des spécifications d’outils de communication numérique (ex. : l’influence des algorithmes et l’enfermement dans des « bulles cognitives », la diffusion de fausses nouvelles, etc.).", vulgarisation: "Comprendre que les réseaux nous proposent toujours les mêmes vidéos (algorithmes) et nous enferment dans une 'bulle' d'idées identiques, ou repérer la diffusion de fausses rumeurs (fake news)." }
+                ],
+                'Savoir-faire': [
+                    { id: 'es-sf1', description: "Distinguer commerce traditionnel et e-commerce du point de vue tant du consommateur (accès, prix, etc.) que de leurs impacts (environnementaux, sociaux, etc.).", vulgarisation: "Expliquer les différences entre acheter dans un vrai magasin du coin (commerce traditionnel) et sur Amazon (e-commerce) en comparant la pollution des livraisons, le prix et les emplois locaux." },
+                    { id: 'es-sf2', description: "Exemplifier des pratiques de consommation collaborative et d’e-commerce différentes.", vulgarisation: "Donner des exemples d'achats en ligne modernes (ex: Amazon, Vinted pour l'occasion, BlaBlaCar pour le covoiturage)." },
+                    { id: 'es-sf3', description: "Comparer les fonctions de l’agent économique « ménages » sur le marché traditionnel et le marché collaboratif.", vulgarisation: "Expliquer que dans un marché collaboratif (ex: Vinted), un simple particulier (le ménage) peut à la fois être un acheteur mais aussi devenir le vendeur, alors que dans le commerce classique il n'est qu'acheteur." },
+                    { id: 'es-sf4', description: "Comparer différentes manières de « se mettre en scène » sur les réseaux sociaux.", vulgarisation: "Analyser deux comptes d'adolescents fictifs et repérer les techniques utilisées pour se donner du style ou de l'importance (filtres esthétiques, photos de vacances, mise en valeur d'objets chers)." },
+                    { id: 'es-sf5', description: "Questionner la capacité et la possibilité pour tout individu de participer à des échanges économiques et sociaux dans l’espace numérique (ex. : en termes de fracture numérique) et certains de leur(s) impact(s).", vulgarisation: "Réfléchir au fait que tout le monde n'a pas un smartphone récent, une bonne connexion internet ou un compte bancaire (la fracture numérique) et expliquer les difficultés que cela crée pour eux." }
+                ],
+                'Compétence': [
+                    { id: 'es-c1', description: "Formuler un avis argumenté sur différentes pratiques de commerce à partir de l’analyse des impacts économiques, sociaux et environnementaux de la consommation collaborative et de l’e-commerce par rapport au commerce traditionnel.", vulgarisation: "Rédiger ton propre avis sérieux en expliquant les avantages et les inconvénients écologiques (transport, emballage), sociaux (travail des livreurs) et économiques (argent économisé ou perdu) du commerce sur Internet." }
+                ]
+            }
+        };
+
+        const DETAILS_NIVEAUX = {
+            'non_acquis': {
+                titre: 'Non Acquis',
+                colorBgActive: 'bg-rose-50',
+                colorBorderActive: 'border-red-300',
+                colorTextActive: 'text-red-900',
+                colorBadge: 'bg-red-100 text-red-800 border-red-200',
+                btnColorActive: 'bg-red-600 text-white border-red-600 shadow-md',
+                dotColor: 'bg-red-500',
+                radioAccent: 'accent-red-600'
+            },
+            'en_voie': {
+                titre: 'En Voie d\'acquisition',
+                colorBgActive: 'bg-amber-50',
+                colorBorderActive: 'border-amber-300',
+                colorTextActive: 'text-amber-900',
+                colorBadge: 'bg-amber-100 text-amber-800 border-amber-200',
+                btnColorActive: 'bg-amber-500 text-white border-amber-500 shadow-md',
+                dotColor: 'bg-amber-500',
+                radioAccent: 'accent-amber-500'
+            },
+            'acquis': {
+                titre: 'Acquis',
+                colorBgActive: 'bg-emerald-50',
+                colorBorderActive: 'border-emerald-300',
+                colorTextActive: 'text-emerald-900',
+                colorBadge: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                btnColorActive: 'bg-emerald-600 text-white border-emerald-600 shadow-md',
+                dotColor: 'bg-emerald-500',
+                radioAccent: 'accent-emerald-600'
+            }
+        };
+
+        const MATIERES = [
+            { id: 'histoire', nom: 'Histoire 📜', color: 'red', colorHex: '#DC2626', colorBg: '#FEF2F2', ringColor: 'rgba(220, 38, 38, 0.2)' },
+            { id: 'geographie', nom: 'Géographie 🌍', color: 'amber', colorHex: '#D97706', colorBg: '#FEF3C7', ringColor: 'rgba(217, 119, 6, 0.2)' },
+            { id: 'eco_sociale', nom: 'Form. Éco & Sociale 💳👥', color: 'blue', colorHex: '#1D4ED8', colorBg: '#EFF6FF', ringColor: 'rgba(29, 78, 216, 0.2)' }
+        ];
+
+        // --- GLOBAL APP STATE ---
+        window.appState = {
+            vueActive: 'eleve',
+            matiereActive: 'histoire',
+            categorieActive: 'Savoir',
+            identite: { nom: '', prenom: '', classe: '' },
+            donnees: {},
+            commentaireGeneral: '',
+            termine: false
+        };
+        window.currentSelectedStudentId = null;
+        window.activeSidebarItemId = null;
+
+        // --- HELPER DE RECHERCHE D'ITEM ---
+        function trouverItemParId(id) {
+            for (let mat in BASE_EVALUATIONS) {
+                for (let cat in BASE_EVALUATIONS[mat]) {
+                    const found = BASE_EVALUATIONS[mat][cat].find(i => i.id === id);
+                    if (found) return { item: found, categorie: cat, matiere: mat };
+                }
+            }
+            return null;
+        }
+
+        // --- INITIALISATION FIREBASE CLASSIQUE (RÈGLE 1, 2, 3) ---
+        function initialiserFirebaseEtCharger() {
+            appId = typeof __app_id !== 'undefined' ? __app_id : defaultAppId;
+            
+            try {
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    firebase.initializeApp(firebaseConfig);
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+
+                    const initAuth = async () => {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await auth.signInWithCustomToken(__initial_auth_token);
+                        } else {
+                            await auth.signInAnonymously();
+                        }
+                    };
+
+                    initAuth().then(() => {
+                        auth.onAuthStateChanged(async (user) => {
+                            if (user) {
+                                currentUser = user;
+                                await ecouterMesDonneesPermanentes();
+                                ecouterListeElevesEnseignant();
+                            }
+                            window.renderFiltresMatieres();
+                            window.selectionnerCategorie(window.appState.categorieActive);
+                        });
+                    }).catch(err => {
+                        console.warn("Échec auth, bascule en local autonome.");
+                        basculerLocal();
+                    });
+
+                } else {
+                    basculerLocal();
+                }
+            } catch (error) {
+                console.warn("Firebase non disponible, bascule locale passive.");
+                basculerLocal();
+            }
+        }
+
+        function basculerLocal() {
+            window.renderFiltresMatieres();
+            window.selectionnerCategorie('Savoir');
+            const secours = localStorage.getItem('ar_binche_evaluation_locale_v2');
+            if (secours) {
+                const parsed = JSON.parse(secours);
+                window.appState.identite = parsed.identite || { nom: '', prenom: '', classe: '' };
+                window.appState.donnees = parsed.donnees || {};
+                window.appState.commentaireGeneral = parsed.commentaireGeneral || '';
+                window.appState.termine = parsed.termine || false;
+                window.myOwnStudentData = JSON.parse(JSON.stringify(parsed));
+                window.chargerIdentiteVisuelle();
+                window.renderCartesCompetences();
+            }
+        }
+
+        // --- SAUVEGARDES ET SYNCHRONISATIONS ---
+        window.sauvegarderIdentite = function() {
+            const nomInput = document.getElementById('eleve-nom');
+            const prenomInput = document.getElementById('eleve-prenom');
+            const classeInput = document.getElementById('eleve-classe');
+            if (nomInput) window.appState.identite.nom = nomInput.value;
+            if (prenomInput) window.appState.identite.prenom = prenomInput.value;
+            if (classeInput) window.appState.identite.classe = classeInput.value;
+            window.triggerAutoSync();
+        };
+
+        window.enregistrerCommentaireGeneral = function(texte) {
+            window.appState.commentaireGeneral = texte;
+            
+            if (window.currentSelectedStudentId) {
+                if (window.currentSelectedStudentId === "simulation-local-id" || window.currentSelectedStudentId.startsWith("import_")) {
+                    cacheListeEleves[window.currentSelectedStudentId].commentaireGeneral = texte;
+                    if (window.currentSelectedStudentId === "simulation-local-id") {
+                        window.myOwnStudentData.commentaireGeneral = texte;
+                        localStorage.setItem('ar_binche_evaluation_locale_v2', JSON.stringify(window.myOwnStudentData));
+                    }
+                } else {
+                    const paquet = { 
+                        identite: window.appState.identite, 
+                        donnees: window.appState.donnees, 
+                        commentaireGeneral: texte,
+                        termine: true, 
+                        timestamp: new Date().getTime() 
+                    };
+                    window.enregistrerCorrectionProfVersCloud(window.currentSelectedStudentId, paquet);
+                }
+            } else {
+                window.triggerAutoSync();
+            }
+        };
+
+        window.chargerIdentiteVisuelle = function() {
+            const nomEl = document.getElementById('eleve-nom');
+            const prenomEl = document.getElementById('eleve-prenom');
+            const classeEl = document.getElementById('eleve-classe');
+            const commGenEl = document.getElementById('prof-commentaire-general');
+            
+            if(nomEl) nomEl.value = window.appState.identite.nom || '';
+            if(prenomEl) prenomEl.value = window.appState.identite.prenom || '';
+            if(classeEl) classeEl.value = window.appState.identite.classe || '';
+            if(commGenEl) commGenEl.value = window.appState.commentaireGeneral || '';
+        };
+
+        window.triggerAutoSync = function() {
+            if (window.sauvegarderVersCloud && window.currentSelectedStudentId === null) {
+                const paquet = {
+                    identite: window.appState.identite,
+                    donnees: window.appState.donnees,
+                    commentaireGeneral: window.appState.commentaireGeneral || '',
+                    termine: window.appState.termine || false,
+                    timestamp: new Date().getTime()
+                };
+                window.sauvegarderVersCloud(paquet);
+            }
+        };
+
+        window.sauvegarderVersCloud = async function(paquet) {
+            if (!db || !currentUser) {
+                localStorage.setItem('ar_binche_evaluation_locale_v2', JSON.stringify(paquet));
+                return;
+            }
+            try {
+                const docRef = db.doc('artifacts/' + appId + '/public/data/evaluations/' + currentUser.uid);
+                await docRef.set(paquet, { merge: true });
+                window.lancerNotification("Sauvegarde en ligne synchronisée !");
+            } catch (e) {
+                localStorage.setItem('ar_binche_evaluation_locale_v2', JSON.stringify(paquet));
+            }
+        };
+
+        // --- CALCUL DE LA PROGRESSION DE L'AUTOÉVALUATION ---
+        window.calculerProgression = function() {
+            let total = 0;
+            let remplis = 0;
+            const details = {};
+
+            MATIERES.forEach(mat => {
+                details[mat.id] = {
+                    nom: mat.nom,
+                    total: 0,
+                    remplis: 0,
+                    manquants: []
+                };
+
+                const categories = ['Savoir', 'Savoir-faire', 'Compétence'];
+                categories.forEach(cat => {
+                    const items = BASE_EVALUATIONS[mat.id][cat] || [];
+                    items.forEach(item => {
+                        total++;
+                        details[mat.id].total++;
+
+                        const evalData = window.appState.donnees[item.id] || {};
+                        if (evalData.eleveEval) {
+                            remplis++;
+                            details[mat.id].remplis++;
+                        } else {
+                            details[mat.id].manquants.push({
+                                id: item.id,
+                                description: item.description,
+                                vulgarisation: item.vulgarisation,
+                                categorie: cat
+                            });
+                        }
+                    });
+                });
+            });
+
+            return {
+                total: total,
+                remplis: remplis,
+                pourcentage: total > 0 ? Math.round((remplis / total) * 100) : 0,
+                details: details
+            };
+        };
+
+        // --- GESTION DU MODAL DE LA CHECKLIST INTERACTIVE ---
+        window.marquerCommeTermine = function() {
+            window.sauvegarderIdentite();
+            if (!window.appState.identite.nom || !window.appState.identite.prenom) {
+                alert("N'oublie pas de compléter ton NOM et ton PRÉNOM tout en haut de l'écran avant de valider ! ✍️");
+                return;
+            }
+
+            const rapport = window.calculerProgression();
+            
+            const bar = document.getElementById('checklist-progress-bar');
+            const percentBadge = document.getElementById('checklist-percentage-badge');
+            const textProg = document.getElementById('checklist-progress-text');
+            const scroller = document.getElementById('checklist-body-scroller');
+            const warningBox = document.getElementById('checklist-warning-box');
+            const successBox = document.getElementById('checklist-success-box');
+            const btnSubmit = document.getElementById('checklist-btn-submit');
+
+            if (bar) bar.style.width = `${rapport.pourcentage}%`;
+            if (percentBadge) percentBadge.innerText = `${rapport.pourcentage}%`;
+            if (textProg) textProg.innerText = `${rapport.remplis} attendus cochés sur ${rapport.total}`;
+
+            if (scroller) {
+                scroller.innerHTML = '';
+                
+                MATIERES.forEach(mat => {
+                    const mInfo = rapport.details[mat.id];
+                    const isMatiereOk = mInfo.manquants.length === 0;
+
+                    let itemsListHtml = '';
+                    if (isMatiereOk) {
+                        itemsListHtml = `
+                            <div class="flex items-center gap-2 text-xs text-emerald-600 font-bold bg-emerald-50 p-2.5 rounded-xl border border-emerald-100">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                <span>Super ! Tous les attendus de cette discipline sont remplis.</span>
+                            </div>`;
+                    } else {
+                        mInfo.manquants.forEach(item => {
+                            itemsListHtml += `
+                                <div onclick="window.allerAItem('${mat.id}', '${item.categorie}', '${item.id}')" 
+                                     class="group cursor-pointer hover:bg-red-50/70 p-3 rounded-xl border border-dashed border-red-200 transition-all bg-white text-left flex items-start gap-2">
+                                    <div class="w-2.5 h-2.5 rounded-full bg-red-500 mt-1.5 shrink-0 group-hover:scale-125 transition-transform"></div>
+                                    <div>
+                                        <span class="inline-block bg-red-100 text-red-800 text-[10px] font-black uppercase px-2 py-0.5 rounded-md mb-1">
+                                            ${item.categorie}s
+                                        </span>
+                                        <p class="text-xs font-bold text-slate-800 line-clamp-1 group-hover:underline">${item.description}</p>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">${item.vulgarisation}</p>
+                                    </div>
+                                </div>`;
+                        });
+                    }
+
+                    scroller.innerHTML += `
+                        <div class="border border-slate-200/80 rounded-2xl p-4 bg-slate-50/50">
+                            <div class="flex items-center justify-between mb-3 border-b border-slate-200/50 pb-2">
+                                <h4 class="font-extrabold text-sm text-slate-900">${mInfo.nom}</h4>
+                                <span class="text-[11px] font-bold text-slate-500">${mInfo.remplis} / ${mInfo.total} complété(s)</span>
+                            </div>
+                            <div class="space-y-2">
+                                ${itemsListHtml}
+                            </div>
+                        </div>`;
+                });
+            }
+
+            if (rapport.pourcentage < 100) {
+                if (warningBox) warningBox.classList.remove('hidden');
+                if (successBox) successBox.classList.add('hidden');
+                if (btnSubmit) {
+                    btnSubmit.removeAttribute('disabled');
+                    btnSubmit.innerText = "Envoyer quand même 🚀";
+                }
+            } else {
+                if (warningBox) warningBox.classList.add('hidden');
+                if (successBox) successBox.classList.remove('hidden');
+                if (btnSubmit) {
+                    btnSubmit.removeAttribute('disabled');
+                    btnSubmit.innerText = "Confirmer et envoyer 🚀";
+                }
+            }
+
+            const modal = document.getElementById('checklist-modal');
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.fermerChecklistModal = function() {
+            const modal = document.getElementById('checklist-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        // --- NAVIGATION GUIDÉE ET FLUIDE VERS UN CRITÈRE MANQUANT ---
+        window.allerAItem = function(matiereId, categorie, itemId) {
+            window.fermerChecklistModal();
+            window.appState.matiereActive = matiereId;
+            window.renderFiltresMatieres();
+            window.selectionnerCategorie(categorie);
+
+            setTimeout(() => {
+                const targetRow = document.getElementById(`row-${itemId}`);
+                if (targetRow) {
+                    targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetRow.classList.add('row-highlight');
+                    
+                    setTimeout(() => {
+                        targetRow.classList.remove('row-highlight');
+                    }, 6000);
+                    
+                    window.lancerNotification(`Complète cette ligne de ${categorie}s !`);
+                }
+            }, 300);
+        };
+
+        window.confirmerEnvoiFinal = async function() {
+            window.fermerChecklistModal();
+            window.appState.termine = true;
+            
+            const paquet = {
+                identite: window.appState.identite,
+                donnees: window.appState.donnees,
+                commentaireGeneral: window.appState.commentaireGeneral || '',
+                termine: true,
+                timestamp: new Date().getTime()
+            };
+            
+            window.myOwnStudentData = JSON.parse(JSON.stringify(paquet));
+            localStorage.setItem('ar_binche_evaluation_locale_v2', JSON.stringify(paquet));
+            
+            window.proposerTelechargementFichierJSON(paquet);
+            
+            await window.sauvegarderVersCloud(paquet);
+            window.lancerNotification("C'est parfait ! Ton travail a été enregistré ! Transmets maintenant ton fichier de sauvegarde au professeur. 🚀");
+            
+            const btn = document.getElementById('btn-termine');
+            if (btn) {
+                btn.innerHTML = "Auto-évaluation envoyée et téléchargée ! ✓";
+                btn.className = "w-full bg-emerald-600 text-white text-sm font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-100 transition-all cursor-default flex items-center justify-center space-x-2";
+            }
+        };
+
+        // --- SYSTEME DE SAUVEGARDE ET EXPORTATION PHYSIQUE POUR TEAMS ---
+        window.proposerTelechargementFichierJSON = function(paquet) {
+            const nomNormalise = (paquet.identite.nom || "anonyme").toLowerCase().replace(/[^a-z0-9]/g, "_");
+            const prenomNormalise = (paquet.identite.prenom || "eleve").toLowerCase().replace(/[^a-z0-9]/g, "_");
+            const classeNormalise = (paquet.identite.classe || "S1").toLowerCase().replace(/[^a-z0-9]/g, "_");
+            
+            const nomFichier = `AutoEval_ScHumaines_${classeNormalise}_${nomNormalise}_${prenomNormalise}.json`;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(paquet));
+            
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", nomFichier);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        };
+
+        // --- METHODE D'IMPORTATION DES COPIES REÇUES DEPUIS TEAMS POUR LE PROFESSEUR ---
+        window.importerFichierJSON = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const contenuJSON = JSON.parse(e.target.result);
+                    
+                    if (!contenuJSON.identite || !contenuJSON.donnees) {
+                        alert("Le fichier sélectionné n'est pas un fichier d'auto-évaluation valide.");
+                        return;
+                    }
+
+                    const importId = "import_" + (contenuJSON.identite.nom || "nom").toLowerCase() + "_" + (contenuJSON.identite.prenom || "prenom").toLowerCase() + "_" + Date.now();
+                    
+                    cacheListeEleves[importId] = {
+                        identite: contenuJSON.identite,
+                        donnees: contenuJSON.donnees,
+                        commentaireGeneral: contenuJSON.commentaireGeneral || '',
+                        termine: contenuJSON.termine || false
+                    };
+                    
+                    window.miseAJourListeElevesVisuelle();
+                    window.chargerCopieImportee(importId);
+                    window.lancerNotification(`Fichier de ${contenuJSON.identite.prenom} chargé avec succès !`);
+                } catch (error) {
+                    alert("Erreur lors de la lecture du fichier JSON. Vérifiez qu'il n'est pas corrompu.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = "";
+        };
+
+        window.chargerCopieImportee = function(importId) {
+            const data = cacheListeEleves[importId];
+            if (!data) return;
+
+            window.currentSelectedStudentId = importId;
+            window.appState.identite = JSON.parse(JSON.stringify(data.identite));
+            window.appState.donnees = JSON.parse(JSON.stringify(data.donnees));
+            window.appState.commentaireGeneral = data.commentaireGeneral || '';
+            
+            window.chargerIdentiteVisuelle();
+            window.renderCartesCompetences();
+            window.renderDiagnosticGlobal();
+            
+            const btnWord = document.getElementById('btn-export-word');
+            if(btnWord) {
+                btnWord.className = "bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer opacity-100";
+                btnWord.removeAttribute('disabled');
+            }
+            const txtWord = document.getElementById('text-export-word');
+            if(txtWord) {
+                txtWord.innerText = `Exporter ${window.appState.identite.prenom} (Word)`;
+            }
+
+            window.miseAJourListeElevesVisuelle();
+            
+            const textExpl = document.getElementById('texte-explication');
+            if (textExpl) {
+                textExpl.innerHTML = `🎨 Fiche importée de <strong class="text-amber-300 font-extrabold">${window.appState.identite.prenom} ${window.appState.identite.nom.toUpperCase()}</strong> chargée avec succès ! Vous pouvez valider ses critères individuels avec les outils adaptatifs, générer le bilan, puis l'exporter.`;
+            }
+        };
+
+        window.miseAJourListeElevesVisuelle = function() {
+            const container = document.getElementById('student-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            let count = 0;
+            
+            Object.keys(cacheListeEleves).forEach(studentId => {
+                count++;
+                const data = cacheListeEleves[studentId];
+                const iden = data.identite || {};
+                const prenom = iden.prenom || "Élève";
+                const nom = iden.nom || "Anonyme";
+                const classE = iden.classe || "S1";
+                
+                const isImported = studentId.startsWith("import_");
+                const isSelected = window.currentSelectedStudentId === studentId;
+                
+                const btnStyle = isSelected 
+                    ? "bg-blue-700 text-white border-blue-700 shadow-md ring-2 ring-blue-200" 
+                    : "bg-white text-slate-800 border-slate-200 hover:bg-slate-50";
+                    
+                container.innerHTML += `
+                    <button onclick="${isImported ? `window.chargerCopieImportee('${studentId}')` : `window.chargerCopieEleve('${studentId}')`}" class="flex flex-col items-start p-3 rounded-xl border text-left transition-all ${btnStyle}">
+                        <span class="font-extrabold text-xs truncate max-w-full text-slate-900 flex items-center gap-1">
+                            ${prenom} ${nom.toUpperCase()}
+                            ${isImported ? '<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">Importé</span>' : ''}
+                            ${studentId === "simulation-local-id" ? '<span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">Test</span>' : ''}
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-semibold">Classe : ${classE}</span>
+                    </button>
+                `;
+            });
+
+            if (count === 0) {
+                container.innerHTML = `
+                    <div class="col-span-4 p-5 text-center text-slate-400 italic text-xs bg-white rounded-2xl border border-dashed border-slate-200">
+                        Aucun élève chargé dans l'application. Utilisez la zone ci-dessus pour importer les fichiers .json renvoyés par vos élèves sur Teams !
+                    </div>`;
+            }
+        };
+
+        async function ecouterMesDonneesPermanentes() {
+            if (!db || !currentUser) return;
+            try {
+                const docRef = db.doc('artifacts/' + appId + '/public/data/evaluations/' + currentUser.uid);
+                const snapshot = await docRef.get();
+                if (snapshot.exists) {
+                    const data = snapshot.data();
+                    if (data && !window.currentSelectedStudentId) {
+                        window.appState.identite = data.identite || { nom: '', prenom: '', classe: '' };
+                        window.appState.donnees = data.donnees || {};
+                        window.appState.commentaireGeneral = data.commentaireGeneral || '';
+                        window.appState.termine = data.termine || false;
+                        
+                        window.myOwnStudentData = JSON.parse(JSON.stringify(data));
+                        
+                        window.chargerIdentiteVisuelle();
+                        window.renderCartesCompetences();
+                        
+                        if (data.termine) {
+                            const btn = document.getElementById('btn-termine');
+                            if (btn) {
+                                btn.innerHTML = "Auto-évaluation envoyée et téléchargée ! ✓";
+                                btn.className = "w-full bg-emerald-600 text-white text-sm font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-100 transition-all cursor-default flex items-center justify-center space-x-2";
+                            }
+                        }
+                    }
+                } else {
+                    const secours = localStorage.getItem('ar_binche_evaluation_locale_v2');
+                    if (secours) {
+                        const parsed = JSON.parse(secours);
+                        window.appState.identite = parsed.identite || { nom: '', prenom: '', classe: '' };
+                        window.appState.donnees = parsed.donnees || {};
+                        window.appState.commentaireGeneral = parsed.commentaireGeneral || '';
+                        window.appState.termine = parsed.termine || false;
+                        window.myOwnStudentData = JSON.parse(JSON.stringify(parsed));
+                        window.chargerIdentiteVisuelle();
+                        window.renderCartesCompetences();
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // --- GESTION ET RENDU DU DIAGNOSTIC DE COULEUR PAR MATIÈRE ---
+        window.renderDiagnosticGlobal = function() {
+            const panel = document.getElementById('diagnostic-panel');
+            const nameSpan = document.getElementById('diagnostic-student-name');
+            const cardsContainer = document.getElementById('diagnostic-cards-container');
+            
+            if (!panel || !cardsContainer) return;
+            
+            if (!window.currentSelectedStudentId) {
+                panel.classList.add('hidden');
+                return;
+            }
+            
+            panel.classList.remove('hidden');
+            if (nameSpan) {
+                nameSpan.innerText = `${window.appState.identite.prenom} ${window.appState.identite.nom.toUpperCase()}`;
+            }
+            
+            cardsContainer.innerHTML = '';
+            
+            MATIERES.forEach(mat => {
+                let countAcquis = 0;
+                let countEnVoie = 0;
+                let countNonAcquis = 0;
+                let totalItems = 0;
+                
+                ['Savoir', 'Savoir-faire', 'Compétence'].forEach(cat => {
+                    const items = BASE_EVALUATIONS[mat.id][cat] || [];
+                    items.forEach(item => {
+                        totalItems++;
+                        const evalData = window.appState.donnees[item.id] || {};
+                        if (evalData.eleveEval === 'acquis') countAcquis++;
+                        else if (evalData.eleveEval === 'en_voie') countEnVoie++;
+                        else if (evalData.eleveEval === 'non_acquis') countNonAcquis++;
+                    });
+                });
+                
+                const complétés = countAcquis + countEnVoie + countNonAcquis;
+                const pourcentAcquis = complétés > 0 ? Math.round((countAcquis / complétés) * 100) : 0;
+                const pourcentEnVoie = complétés > 0 ? Math.round((countEnVoie / complétés) * 100) : 0;
+                const pourcentNonAcquis = complétés > 0 ? Math.round((countNonAcquis / complétés) * 100) : 0;
+                
+                cardsContainer.innerHTML += `
+                    <div class="border border-slate-100 rounded-2xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-all flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <h5 class="font-extrabold text-xs text-slate-800 tracking-wide">${mat.nom}</h5>
+                                <span class="text-[10px] text-slate-400 font-bold">${complétés} / ${totalItems} remplis</span>
+                            </div>
+                            
+                            <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden flex mb-4">
+                                ${countAcquis > 0 ? `<div class="bg-emerald-500 h-full" style="width: ${pourcentAcquis}%" title="Acquis : ${countAcquis}"></div>` : ''}
+                                ${countEnVoie > 0 ? `<div class="bg-amber-500 h-full" style="width: ${pourcentEnVoie}%" title="En Voie : ${countEnVoie}"></div>` : ''}
+                                ${countNonAcquis > 0 ? `<div class="bg-rose-500 h-full" style="width: ${pourcentNonAcquis}%" title="Non Acquis : ${countNonAcquis}"></div>` : ''}
+                                ${complétés === 0 ? `<div class="bg-slate-300 h-full w-full" title="Aucune donnée"></div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+                            <div class="p-2 rounded-xl bg-emerald-50 border border-emerald-100/40">
+                                <p class="font-bold text-emerald-800">Acquis</p>
+                                <p class="text-xs font-black text-emerald-600 mt-0.5">${countAcquis}</p>
+                            </div>
+                            <div class="p-2 rounded-xl bg-amber-50 border border-amber-100/40">
+                                <p class="font-bold text-amber-800">En Voie</p>
+                                <p class="text-xs font-black text-amber-600 mt-0.5">${countEnVoie}</p>
+                            </div>
+                            <div class="p-2 rounded-xl bg-rose-50 border border-rose-100/40">
+                                <p class="font-bold text-rose-800">Non Acq.</p>
+                                <p class="text-xs font-black text-rose-600 mt-0.5">${countNonAcquis}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        // --- GESTION ENSEIGNANT DE LA CLASSE ---
+        function ecouterListeElevesEnseignant() {
+            if (!db || !currentUser) {
+                if (window.myOwnStudentData && window.myOwnStudentData.termine) {
+                    cacheListeEleves["simulation-local-id"] = window.myOwnStudentData;
+                }
+                window.miseAJourListeElevesVisuelle();
+                return;
+            }
+            
+            const collectionRef = db.collection('artifacts/' + appId + '/public/data/evaluations');
+            
+            collectionRef.onSnapshot((snapshot) => {
+                cacheListeEleves = {};
+                if (window.myOwnStudentData && window.myOwnStudentData.termine) {
+                    cacheListeEleves["simulation-local-id"] = window.myOwnStudentData;
+                }
+
+                snapshot.forEach((docSnap) => {
+                    const studentId = docSnap.id;
+                    const data = docSnap.data();
+                    if (data && data.termine) {
+                        cacheListeEleves[studentId] = data;
+                    }
+                });
+                
+                window.miseAJourListeElevesVisuelle();
+            }, (error) => {
+                console.error(error);
+                window.miseAJourListeElevesVisuelle();
+            });
+        }
+
+        window.chargerCopieEleve = async function(studentId) {
+            if (studentId === "simulation-local-id") {
+                window.currentSelectedStudentId = studentId;
+                window.appState.identite = JSON.parse(JSON.stringify(window.myOwnStudentData.identite));
+                window.appState.donnees = JSON.parse(JSON.stringify(window.myOwnStudentData.donnees));
+                window.appState.commentaireGeneral = window.myOwnStudentData.commentaireGeneral || '';
+                
+                window.chargerIdentiteVisuelle();
+                window.renderCartesCompetences();
+                window.renderDiagnosticGlobal();
+                window.lancerNotification(`Copie de test (${window.appState.identite.prenom}) chargée !`);
+                
+                const btnWord = document.getElementById('btn-export-word');
+                if(btnWord) {
+                    btnWord.className = "bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer opacity-100";
+                    btnWord.removeAttribute('disabled');
+                }
+                const txtWord = document.getElementById('text-export-word');
+                if(txtWord) {
+                    txtWord.innerText = `Exporter ${window.appState.identite.prenom} (Word)`;
+                }
+
+                window.miseAJourListeElevesVisuelle();
+                
+                const textExpl = document.getElementById('texte-explication');
+                if (textExpl) {
+                    textExpl.innerHTML = `📝 Fiche d'autoévaluation de <strong class="text-amber-300 font-extrabold">${window.appState.identite.prenom} ${window.appState.identite.nom.toUpperCase()}</strong> chargée (Mode Simulation/Test). Modifiez ses critères, générez son appréciation finale globale et sauvegardez son Word.`;
+                }
+                return;
+            }
+
+            if (!db) return;
+            window.currentSelectedStudentId = studentId;
+            try {
+                const docRef = db.doc('artifacts/' + appId + '/public/data/evaluations/' + studentId);
+                const snapshot = await docRef.get();
+                if (snapshot.exists) {
+                    const data = snapshot.data();
+                    window.appState.identite = data.identite || { nom: '', prenom: '', classe: '' };
+                    window.appState.donnees = data.donnees || {};
+                    window.appState.commentaireGeneral = data.commentaireGeneral || '';
+                    
+                    window.chargerIdentiteVisuelle();
+                    window.renderCartesCompetences();
+                    window.renderDiagnosticGlobal();
+                    window.lancerNotification(`Copie de ${window.appState.identite.prenom} chargée.`);
+                    
+                    const btnWord = document.getElementById('btn-export-word');
+                    if(btnWord) {
+                        btnWord.className = "bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center space-x-1.5 cursor-pointer opacity-100";
+                        btnWord.removeAttribute('disabled');
+                    }
+                    const txtWord = document.getElementById('text-export-word');
+                    if(txtWord) {
+                        txtWord.innerText = `Exporter ${window.appState.identite.prenom} (Word)`;
+                    }
+
+                    window.miseAJourListeElevesVisuelle();
+                    
+                    const textExpl = document.getElementById('texte-explication');
+                    if (textExpl) {
+                        textExpl.innerHTML = `💼 Dossier d'auto-évaluation de <strong class="text-amber-300 font-extrabold">${window.appState.identite.prenom} ${window.appState.identite.nom.toUpperCase()}</strong> actif. Naviguez dans les onglets, cliquez sur « Saisir » dans la colonne Enseignant pour évaluer avec retour automatique.`;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        window.enregistrerCorrectionProfVersCloud = async function(studentId, paquet) {
+            if (studentId.startsWith("import_") || studentId === "simulation-local-id") {
+                cacheListeEleves[studentId] = paquet;
+                window.lancerNotification("Correction mise à jour localement ! ✓");
+                window.renderDiagnosticGlobal();
+                return;
+            }
+
+            if (!db || !currentUser) return;
+            try {
+                const docRef = db.doc('artifacts/' + appId + '/public/data/evaluations/' + studentId);
+                await docRef.set(paquet, { merge: true });
+                window.lancerNotification("Correction mise à jour en ligne ! ✓");
+                window.renderDiagnosticGlobal();
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        // --- ALGORITHME D'ANALYSE ET DE GÉNÉRATION DU BILAN GLOBAL D'APPRENTISSAGE ---
+        window.genererBilanAutomatique = function() {
+            if (!window.currentSelectedStudentId) {
+                alert("Veuillez d'abord charger la copie d'un élève.");
+                return;
+            }
+
+            // Statistique d'évaluation globale
+            let totalAttribues = 0;
+            let totalEvalues = 0;
+            
+            // Statistiques de couleur de l'enseignant
+            let countAcquis = 0;
+            let countEnVoie = 0;
+            let countNonAcquis = 0;
+
+            // Analyse par matière
+            let matStats = { histoire: { total: 0, acquis: 0 }, geographie: { total: 0, acquis: 0 }, eco_sociale: { total: 0, acquis: 0 } };
+
+            // Analyse d'accord enseignant/élève
+            let totalAccord = 0;
+            let totalSurevalue = 0;
+            let totalSousestime = 0;
+
+            for (let itemId in window.appState.donnees) {
+                const ev = window.appState.donnees[itemId];
+                const itemMeta = trouverItemParId(itemId);
+                
+                if (ev && itemMeta) {
+                    totalAttribues++;
+                    const profVal = ev.profEval || ev.eleveEval; // Si pas encore validé, on se base sur l'auto-évaluation pour estimer le profil
+                    
+                    if (profVal) {
+                        totalEvalues++;
+                        if (profVal === 'acquis') {
+                            countAcquis++;
+                            matStats[itemMeta.matiere].acquis++;
+                        } else if (profVal === 'en_voie') {
+                            countEnVoie++;
+                        } else if (profVal === 'non_acquis') {
+                            countNonAcquis++;
+                        }
+                        matStats[itemMeta.matiere].total++;
+                    }
+
+                    // Calcul de la concordance d'appréciation
+                    if (ev.eleveEval && ev.profEval) {
+                        if (ev.eleveEval === ev.profEval) {
+                            totalAccord++;
+                        } else if (
+                            (ev.eleveEval === 'acquis' && ev.profEval !== 'acquis') ||
+                            (ev.eleveEval === 'en_voie' && ev.profEval === 'non_acquis')
+                        ) {
+                            totalSurevalue++;
+                        } else {
+                            totalSousestime++;
+                        }
+                    }
+                }
+            }
+
+            if (totalEvalues === 0) {
+                alert("Veuillez d'abord renseigner des validations ou des auto-évaluations pour générer un rapport.");
+                return;
+            }
+
+            const ratioAcquis = Math.round((countAcquis / totalEvalues) * 100);
+            const ratioEnVoie = Math.round((countEnVoie / totalEvalues) * 100);
+            const ratioNonAcquis = Math.round((countNonAcquis / totalEvalues) * 100);
+
+            // Recherche de la matière forte et de la matière à travailler
+            let matiereForteId = 'histoire';
+            let matiereFaibleId = 'histoire';
+            let maxPercent = -1;
+            let minPercent = 101;
+
+            for (let mKey in matStats) {
+                const tot = matStats[mKey].total;
+                const acq = matStats[mKey].acquis;
+                const pct = tot > 0 ? Math.round((acq / tot) * 100) : 0;
+                
+                if (pct > maxPercent) {
+                    maxPercent = pct;
+                    matiereForteId = mKey;
+                }
+                if (pct < minPercent) {
+                    minPercent = pct;
+                    matiereFaibleId = mKey;
+                }
+            }
+
+            const mForteLabel = matiereForteId === 'histoire' ? "en Histoire" : (matiereForteId === 'geographie' ? "en Géographie" : "en Formation Économique et Sociale");
+            const mFaibleLabel = matiereFaibleId === 'histoire' ? "l'Histoire" : (matiereFaibleId === 'geographie' ? "la Géographie" : "la Formation Économique et Sociale");
+
+            let prenom = window.appState.identite.prenom || "L'élève";
+            let texteSynthese = "";
+
+            // Génération de l'appréciation textuelle dynamique en fonction des résultats
+            if (ratioAcquis >= 75) {
+                texteSynthese = `Bilan très positif pour ${prenom}. L'ensemble des attendus du référentiel en Sciences Humaines est particulièrement bien maîtrisé, notamment ${mForteLabel} où les compétences d'analyse sont excellentes. ${prenom} fait preuve d'une belle rigueur dans son travail. `;
+            } else if (ratioAcquis >= 45) {
+                texteSynthese = `Un bilan encourageant pour ${prenom}. La majorité des compétences et savoirs essentiels sont en cours d'acquisition ou déjà acquis. On observe de bons points d'appui ${mForteLabel}. Quelques notions doivent encore être consolidées, notamment en ce qui concerne ${mFaibleLabel}, mais la dynamique de travail est très positive. `;
+            } else {
+                texteSynthese = `Le bilan d'étape montre que plusieurs attendus restent fragiles pour ${prenom}, en particulier concernant ${mFaibleLabel}. Les savoirs fondamentaux et savoir-faire méthodologiques ont besoin d'être retravaillés avec régularité en classe et à la maison pour sécuriser les bases. Courage, les efforts vont payer ! `;
+            }
+
+            // Commentaire sur l'accord et le réalisme de l'auto-évaluation
+            if (totalSurevalue > totalAccord && totalSurevalue > 3) {
+                texteSynthese += `Attention toutefois à l'auto-évaluation : ${prenom} a tendance à surestimer sa maîtrise de certains critères. Il sera important de bien relire les critères de réussite officiels et de s'exercer de manière plus objective pour cibler précisément ses réels besoins d'apprentissage.`;
+            } else if (totalSousestime > totalAccord && totalSousestime > 3) {
+                texteSynthese += `On remarque également que ${prenom} a tendance à sous-estimer ses réelles capacités. Les validations montrent une maîtrise bien plus solide que ce qui a été auto-évalué. Fais-toi confiance !`;
+            } else if (totalAccord > (totalSurevalue + totalSousestime)) {
+                texteSynthese += `Par ailleurs, ${prenom} fait preuve d'une excellente lucidité et d'une grande maturité dans son auto-évaluation, qui est tout à fait conforme aux observations de l'enseignant. C'est une compétence d'apprentissage essentielle.`;
+            } else {
+                texteSynthese += `L'exercice d'auto-évaluation a permis un dialogue constructif. Il convient de poursuivre l'effort de rigueur méthodologique dans l'ensemble des disciplines.`;
+            }
+
+            // Injection dans le textarea et mise à jour de l'état
+            const textEl = document.getElementById('prof-commentaire-general');
+            if (textEl) {
+                textEl.value = texteSynthese;
+                window.enregistrerCommentaireGeneral(texteSynthese);
+                window.lancerNotification("🪄 Bilan automatique de synthèse généré !");
+            }
+        };
+
+        // --- ENSEIGNANT : MODULES D'EXPRESSION ET D'EXPORTATION ---
+        window.exporterExcelCSV = function() {
+            if (Object.keys(cacheListeEleves).length === 0) {
+                alert("Aucune évaluation d'élève n'a encore été chargée sur votre tableau de bord.");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; // BOM pour Excel
+            csvContent += "Classe;Nom de l'élève;Prénom de l'élève;Matière;Catégorie;Attendu d'apprentissage;Auto-évaluation élève;Validation Enseignant;Accord Enseignant;Commentaire/Remarque Enseignant;Commentaire Général Élève\r\n";
+
+            Object.values(cacheListeEleves).forEach(studentData => {
+                const iden = studentData.identite || {};
+                const cNom = iden.nom ? iden.nom.toUpperCase() : "ANONYME";
+                const cPrenom = iden.prenom || "Élève";
+                const cClasse = iden.classe || "S1";
+                const sDonnees = studentData.donnees || {};
+                const cGeneral = (studentData.commentaireGeneral || "").replace(/;/g, ",").replace(/\r?\n|\r/g, " ");
+
+                MATIERES.forEach(mat => {
+                    const listMatiere = BASE_EVALUATIONS[mat.id] || {};
+                    ['Savoir', 'Savoir-faire', 'Compétence'].forEach(cat => {
+                        const items = listMatiere[cat] || [];
+                        items.forEach(item => {
+                            const evalItem = sDonnees[item.id] || { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+                            
+                            let elTxt = "Non complété";
+                            if (evalItem.eleveEval === 'acquis') elTxt = "Acquis";
+                            if (evalItem.eleveEval === 'en_voie') elTxt = "En Voie d'acquisition";
+                            if (evalItem.eleveEval === 'non_acquis') elTxt = "Non Acquis";
+
+                            let prTxt = "Non évalué";
+                            if (evalItem.profEval === 'acquis') prTxt = "Acquis";
+                            if (evalItem.profEval === 'en_voie') prTxt = "En Voie d'acquisition";
+                            if (evalItem.profEval === 'non_acquis') prTxt = "Non Acquis";
+
+                            let accTxt = "Non renseigné";
+                            if (evalItem.profAccord === 'd_accord') accTxt = "D'accord";
+                            if (evalItem.profAccord === 'desaccord_surevalue') accTxt = "Désaccord (Élève surévalué)";
+                            if (evalItem.profAccord === 'desaccord_sous_estime') accTxt = "Désaccord (Élève sous-estimé)";
+
+                            const cleanedDesc = item.description.replace(/;/g, ",").replace(/\r?\n|\r/g, " ");
+                            const cleanedComment = (evalItem.profComment || "").replace(/;/g, ",").replace(/\r?\n|\r/g, " ");
+
+                            csvContent += `"${cClasse}";"${cNom}";"${cPrenom}";"${mat.nom.replace(/📜|🌍|💳👥/g, "").trim()}";"${cat}";"${cleanedDesc}";"${elTxt}";"${prTxt}";"${accTxt}";"${cleanedComment}";"${cGeneral}"\r\n`;
+                        });
+                    });
+                });
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const dateStr = new Date().toISOString().slice(0, 10);
+            
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `AR_BINCHE_Autoevaluation_Classe_${dateStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.lancerNotification("Fichier d'évaluation de la classe exporté !");
+        };
+
+        window.exporterWordDoc = function() {
+            if (!window.currentSelectedStudentId) {
+                alert("Veuillez d'abord sélectionner un élève dans la liste pour pouvoir exporter sa fiche individuelle.");
+                return;
+            }
+
+            const iden = window.appState.identite || {};
+            const elNom = iden.nom ? iden.nom.toUpperCase() : "INCONNU";
+            const elPrenom = iden.prenom || "Thomas";
+            const elClasse = iden.classe || "1A";
+            const sDonnees = window.appState.donnees || {};
+            const commGen = window.appState.commentaireGeneral || '';
+            const dateStr = new Date().toLocaleDateString('fr-BE');
+
+            let htmlDoc = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8">
+                <title>Fiche d'Évaluation Individuelle - Sciences Humaines</title>
+                <style>
+                    body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; margin: 30px; }
+                    .header { text-align: center; border-bottom: 3px double #1D4ED8; padding-bottom: 10px; margin-bottom: 25px; }
+                    .title { font-size: 22px; font-weight: bold; color: #1D4ED8; }
+                    .subtitle { font-size: 14px; font-style: italic; color: #666; margin-top: 5px; }
+                    .identity-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background-color: #F8FAFC; }
+                    .identity-table td { padding: 12px; border: 1px solid #CBD5E1; font-size: 13px; }
+                    .identity-label { font-weight: bold; color: #1E293B; width: 25%; }
+                    .section-title { font-size: 16px; font-weight: bold; background-color: #1D4ED8; color: #ffffff; padding: 10px; margin-top: 30px; margin-bottom: 10px; }
+                    .eval-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    .eval-table th { background-color: #F1F5F9; border: 1px solid #94A3B8; padding: 10px; font-size: 11px; text-transform: uppercase; text-align: left; }
+                    .eval-table td { border: 1px solid #CBD5E1; padding: 10px; font-size: 12px; vertical-align: top; }
+                    .text-description { font-weight: bold; }
+                    .text-vulgarisation { color: #64748B; font-size: 11px; margin-top: 4px; font-style: italic; }
+                    .badge-acquis { font-weight: bold; color: #047857; }
+                    .badge-en-voie { font-weight: bold; color: #D97706; }
+                    .badge-non-acquis { font-weight: bold; color: #DC2626; }
+                    .comment-block { margin-top: 30px; border: 2px solid #3B82F6; background-color: #EFF6FF; padding: 15px; border-radius: 8px; }
+                    .comment-title { font-weight: bold; color: #1D4ED8; font-size: 14px; margin-bottom: 8px; }
+                    .comment-text { font-size: 13px; line-height: 1.5; font-style: italic; color: #1E293B; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div class="title">ATHÉNÉE ROYAL DE BINCHE</div>
+                    <div class="subtitle">Autoévaluation & Évaluation Formative — Sciences Humaines (1<sup>ère</sup> secondaire)</div>
+                </div>
+
+                <table class="identity-table">
+                    <tr>
+                        <td class="identity-label">Nom de l'élève :</td>
+                        <td>${elNom}</td>
+                        <td class="identity-label">Classe / Groupe :</td>
+                        <td>${elClasse}</td>
+                    </tr>
+                    <tr>
+                        <td class="identity-label">Prénom de l'élève :</td>
+                        <td>${elPrenom}</td>
+                        <td class="identity-label">Date de la fiche :</td>
+                        <td>${dateStr}</td>
+                    </tr>
+                </table>
+            `;
+
+            MATIERES.forEach(mat => {
+                htmlDoc += `<div class="section-title">${mat.nom.replace(/📜|🌍|💳👥/g, "").toUpperCase()}</div>`;
+                
+                ['Savoir', 'Savoir-faire', 'Compétence'].forEach(cat => {
+                    const items = BASE_EVALUATIONS[mat.id][cat] || [];
+                    if (items.length > 0) {
+                        htmlDoc += `<h3 style="font-size: 13px; color: #334155; margin-bottom: 5px; margin-top: 15px;">${cat}s</h3>`;
+                        htmlDoc += `
+                        <table class="eval-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 45%;">Attendus d'apprentissage</th>
+                                    <th style="width: 15%; text-align: center;">Auto-évaluation Élève</th>
+                                    <th style="width: 15%; text-align: center;">Accord Enseignant</th>
+                                    <th style="width: 12%; text-align: center;">Avis Professeur</th>
+                                    <th style="width: 13%;">Remarques / Feed-back</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        `;
+
+                        items.forEach(item => {
+                            const evalItem = sDonnees[item.id] || { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+                            
+                            let elBadge = '<span style="color: #94A3B8;">Non rempli</span>';
+                            if (evalItem.eleveEval === 'acquis') elBadge = '<span class="badge-acquis">Acquis</span>';
+                            if (evalItem.eleveEval === 'en_voie') elBadge = '<span class="badge-en-voie">En Voie</span>';
+                            if (evalItem.eleveEval === 'non_acquis') elBadge = '<span class="badge-non-acquis">Non Acquis</span>';
+
+                            let accTxt = '<span style="color: #64748B;">—</span>';
+                            if (evalItem.profAccord === 'd_accord') accTxt = '<span style="color: #047857; font-weight: bold;">D\'accord</span>';
+                            if (evalItem.profAccord === 'desaccord_surevalue') accTxt = '<span style="color: #DC2626; font-weight: bold;">Surévalué</span>';
+                            if (evalItem.profAccord === 'desaccord_sous_estime') accTxt = '<span style="color: #D97706; font-weight: bold;">Sous-estimé</span>';
+
+                            let prBadge = '<span style="color: #94A3B8;">Non validé</span>';
+                            if (evalItem.profEval === 'acquis') prBadge = '<span class="badge-acquis">Acquis</span>';
+                            if (evalItem.profEval === 'en_voie') prBadge = '<span class="badge-en-voie">En Voie</span>';
+                            if (evalItem.profEval === 'non_acquis') prBadge = '<span class="badge-non-acquis">Non Acquis</span>';
+
+                            htmlDoc += `
+                            <tr>
+                                <td>
+                                    <div class="text-description">${item.description}</div>
+                                    <div class="text-vulgarisation">Mots simples : ${item.vulgarisation}</div>
+                                </td>
+                                <td style="text-align: center; vertical-align: middle;">${elBadge}</td>
+                                <td style="text-align: center; vertical-align: middle; font-size: 11px;">${accTxt}</td>
+                                <td style="text-align: center; vertical-align: middle;">${prBadge}</td>
+                                <td>${evalItem.profComment || '<span style="color: #cbd5e1; font-style: italic;">Aucune remarque</span>'}</td>
+                            </tr>
+                            `;
+                        });
+
+                        htmlDoc += `</tbody></table>`;
+                    }
+                });
+            });
+
+            // Ajout du Commentaire Général à la fin du document Word
+            if (commGen) {
+                htmlDoc += `
+                <div class="comment-block">
+                    <div class="comment-title">BILAN GENERAL ET APPRECIATION DE SYNTHESE :</div>
+                    <div class="comment-text">${commGen.replace(/\n/g, '<br>')}</div>
+                </div>
+                `;
+            }
+
+            htmlDoc += `
+                <br><br>
+                <table style="width:100%; border: none; font-size:12px; margin-top:40px;">
+                    <tr>
+                        <td style="width: 50%; border: none; text-align: left;"><strong>Signature de l'élève</strong></td>
+                        <td style="width: 50%; border: none; text-align: right;"><strong>Signature du professeur</strong></td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            `;
+
+            const blob = new Blob([htmlDoc], { type: 'application/msword;charset=utf-8' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `Fiche_Evaluation_SciencesHumaines_${elNom}_${elPrenom}.doc`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.lancerNotification("Fichier d'évaluation Word individuel téléchargé !");
+        };
+
+        // --- GRAPHISME ET RENDUS GLOBAUX ---
+        window.renderFiltresMatieres = function() {
+            const container = document.getElementById('matiere-selector-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            MATIERES.forEach(mat => {
+                const isActive = window.appState.matiereActive === mat.id;
+                let buttonStyle = "";
+                let classList = "flex items-center justify-center p-4 rounded-2xl border text-center transition-all duration-200 font-extrabold text-xs sm:text-sm shadow-sm ";
+                
+                if (isActive) {
+                    classList += "shadow-md ring-2 ";
+                    buttonStyle = `background-color: ${mat.colorBg}; border-color: ${mat.colorHex}; color: ${mat.colorHex}; --tw-ring-color: ${mat.ringColor};`;
+                } else {
+                    classList += "bg-white border-slate-200 text-slate-600 hover:bg-slate-50";
+                }
+
+                container.innerHTML += `
+                    <button onclick="window.selectionnerMatiere('${mat.id}')" style="${buttonStyle}" class="${classList}">
+                        <span>${mat.nom}</span>
+                    </button>
+                `;
+            });
+        };
+
+        window.selectionnerCategorie = function(categorie) {
+            window.appState.categorieActive = categorie;
+            
+            const boutonsOnglets = ['Savoir', 'Savoir-faire', 'Compétence'];
+            const titreEl = document.getElementById('titre-liste-rubriques');
+            
+            boutonsOnglets.forEach(ong => {
+                const btn = document.getElementById(`tab-${ong}`);
+                if (!btn) return;
+                if (ong === categorie) {
+                    if (ong === 'Savoir') {
+                        btn.className = "flex-1 flex items-center justify-center space-x-2 py-4 px-6 rounded-2xl text-sm font-extrabold transition-all duration-150 bg-red-50 text-red-600 border-2 border-red-200";
+                        if (titreEl) titreEl.innerText = "Savoirs à évaluer (Connaissances)";
+                    } else if (ong === 'Savoir-faire') {
+                        btn.className = "flex-1 flex items-center justify-center space-x-2 py-4 px-6 rounded-2xl text-sm font-extrabold transition-all duration-150 bg-amber-50 text-amber-600 border-2 border-amber-200";
+                        if (titreEl) titreEl.innerText = "Savoir-faire à évaluer (Méthodologie)";
+                    } else if (ong === 'Compétence') {
+                        btn.className = "flex-1 flex items-center justify-center space-x-2 py-4 px-6 rounded-2xl text-sm font-extrabold transition-all duration-150 bg-blue-50 text-blue-700 border-2 border-blue-200";
+                        if (titreEl) titreEl.innerText = "Compétences à évaluer (Intégration d'outils)";
+                    }
+                } else {
+                    btn.className = "flex-1 flex items-center justify-center space-x-2 py-4 px-6 rounded-2xl text-sm font-extrabold transition-all duration-150 text-slate-600 hover:bg-slate-50";
+                }
+            });
+
+            window.fermerSidebarCorrection();
+            window.renderCartesCompetences();
+            window.lancerNotification(`Onglet actif : ${categorie}`);
+        };
+
+        window.renderCartesCompetences = function() {
+            const tableBody = document.getElementById('competences-table-body');
+            if(!tableBody) return;
+            tableBody.innerHTML = '';
+
+            const listMatiere = BASE_EVALUATIONS[window.appState.matiereActive] || {};
+            const itemsFiltrés = listMatiere[window.appState.categorieActive] || [];
+
+            let accentBorderColor = 'border-blue-600';
+            if (window.appState.matiereActive === 'histoire') {
+                accentBorderColor = 'border-red-600';
+            } else if (window.appState.matiereActive === 'geographie') {
+                accentBorderColor = 'border-amber-400';
+            }
+
+            const isProfMode = window.appState.vueActive === 'prof';
+            const isVueEleve = window.appState.vueActive === 'eleve';
+            
+            if (isProfMode && !window.currentSelectedStudentId) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-12 text-center bg-slate-50">
+                            <div class="max-w-md mx-auto">
+                                <div class="inline-flex p-3 bg-amber-50 text-amber-500 rounded-full mb-3">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                                    </svg>
+                                </div>
+                                <h4 class="text-sm font-bold text-slate-800">Aucune copie d'élève sélectionnée</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                    Sélectionnez l'un des élèves connectés ou importés dans la liste en haut de l'écran pour charger et corriger sa copie d'auto-évaluation.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            if (itemsFiltrés.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-slate-400 italic font-medium bg-slate-50/50">
+                            Aucun attendu répertorié dans cet onglet.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            itemsFiltrés.forEach(comp => {
+                const evalData = window.appState.donnees[comp.id] || { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+                
+                let radioColumnsHtml = '';
+                const optionsNiveau = ['non_acquis', 'en_voie', 'acquis'];
+                
+                optionsNiveau.forEach(lvl => {
+                    const isChecked = evalData.eleveEval === lvl;
+                    const d = DETAILS_NIVEAUX[lvl];
+                    const disabledAttr = !isVueEleve ? 'disabled' : '';
+
+                    radioColumnsHtml += `
+                        <td class="p-5 align-middle text-center">
+                            <label class="inline-flex items-center justify-center cursor-pointer">
+                                <input type="radio" name="eleve-${comp.id}" value="${lvl}" ${isChecked ? 'checked' : ''} ${disabledAttr}
+                                       onchange="window.enregistrerAutoEval('${comp.id}', this.value)"
+                                       class="likert-radio ${d.radioAccent} focus:ring-0">
+                            </label>
+                        </td>
+                    `;
+                });
+
+                let profColumnHtml = '';
+                if (isVueEleve) {
+                    if (evalData.profEval) {
+                        const pDetails = DETAILS_NIVEAUX[evalData.profEval];
+                        const displayTitle = evalData.profEval === 'en_voie' ? 'En Voie' : (evalData.profEval === 'acquis' ? 'Acquis' : 'Non Acquis');
+                        
+                        let badgeAccordHtml = '';
+                        if (evalData.profAccord === 'd_accord') {
+                            badgeAccordHtml = '<span class="text-[9px] font-black text-emerald-600 mt-0.5">D\'accord ✓</span>';
+                        } else if (evalData.profAccord === 'desaccord_surevalue') {
+                            badgeAccordHtml = '<span class="text-[9px] font-black text-rose-500 mt-0.5">Surévalué ⚠</span>';
+                        } else if (evalData.profAccord === 'desaccord_sous_estime') {
+                            badgeAccordHtml = '<span class="text-[9px] font-black text-amber-500 mt-0.5">Sous-estimé ↗</span>';
+                        }
+
+                        profColumnHtml = `
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wide ${pDetails.colorBadge}">
+                                    ${displayTitle}
+                                </span>
+                                ${badgeAccordHtml}
+                                ${evalData.profComment ? `
+                                    <button onclick="window.ouvrirAideCommentaire('${comp.id}', '${comp.description.replace(/'/g, "\\'")}')" class="text-[10px] text-blue-700 font-bold hover:underline mt-1 flex items-center">
+                                        <svg class="h-3 w-3 mr-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                        Remarque
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    } else {
+                        profColumnHtml = `<div class="text-slate-400 italic text-[11px] text-center font-medium">En attente</div>`;
+                    }
+                } else {
+                    const isSelected = window.activeSidebarItemId === comp.id;
+                    const btnStyle = isSelected 
+                        ? 'bg-blue-700 text-white border-blue-700 shadow-md shadow-blue-100 ring-2 ring-blue-300' 
+                        : (evalData.profEval 
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300 font-black' 
+                            : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50 hover:border-blue-300');
+
+                    let accordSmallLabel = '';
+                    if (evalData.profEval && evalData.profAccord) {
+                        if (evalData.profAccord === 'd_accord') accordSmallLabel = '<span class="text-[9px] text-emerald-600 font-extrabold mt-0.5">D\'accord ✓</span>';
+                        if (evalData.profAccord === 'desaccord_surevalue') accordSmallLabel = '<span class="text-[9px] text-rose-500 font-extrabold mt-0.5">Surévalué ⚠</span>';
+                        if (evalData.profAccord === 'desaccord_sous_estime') accordSmallLabel = '<span class="text-[9px] text-amber-500 font-extrabold mt-0.5">Sous-estimé ↗</span>';
+                    }
+
+                    profColumnHtml = `
+                        <div class="flex flex-col items-center justify-center">
+                            <button onclick="window.ouvrirSidebarCorrection('${comp.id}', '${comp.description.replace(/'/g, "\\'")}')" class="px-4 py-2 text-xs font-extrabold rounded-xl border transition-all ${btnStyle} shadow-sm">
+                                ${evalData.profEval ? `Validé` : 'Saisir'}
+                            </button>
+                            ${accordSmallLabel}
+                        </div>
+                    `;
+                }
+
+                tableBody.innerHTML += `
+                    <tr id="row-${comp.id}" class="border-b border-slate-100 hover:bg-slate-50/50 transition-all ${window.activeSidebarItemId === comp.id ? 'bg-blue-50/50' : ''}">
+                        <td class="p-5 align-middle">
+                            <p class="font-bold text-slate-900 text-xs sm:text-sm leading-relaxed">${comp.description}</p>
+                            <p class="mt-1.5 pl-3 border-l-2 ${accentBorderColor} text-xs text-slate-500 font-medium leading-relaxed">
+                                ${comp.vulgarisation}
+                            </p>
+                        </td>
+                        ${radioColumnsHtml}
+                        <td class="p-5 align-middle text-center">
+                            ${profColumnHtml}
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        // --- GESTION ENSEIGNANT : COULISSEMENT DU VOLET LATÉRAL DE CORRECTION ---
+        window.ouvrirSidebarCorrection = function(compId, desc) {
+            window.activeSidebarItemId = compId;
+            
+            const sidebar = document.getElementById('correction-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const targetTitle = document.getElementById('correction-target-title');
+            const commentArea = document.getElementById('sidebar-comment-area');
+            const agreementSelect = document.getElementById('sidebar-agreement-select');
+
+            if (targetTitle) targetTitle.innerText = desc;
+            
+            // Initialisation des données enregistrées
+            const savedData = window.appState.donnees[compId] || { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+            if (commentArea) commentArea.value = savedData.profComment || '';
+            
+            if (agreementSelect) {
+                agreementSelect.value = savedData.profAccord || "";
+            }
+
+            // Mettre à jour visuellement les boutons d'acquisition du professeur
+            window.actualiserBoutonsProfEvalVisual(savedData.profEval);
+
+            // Charger les templates appropriés (génériques si pas d'accord, ciblés sinon)
+            window.rechargerSuggestionsCommentaires();
+
+            // Gestion de l'animation CSS d'affichage du tiroir
+            if (sidebar && backdrop) {
+                sidebar.classList.remove('hidden');
+                backdrop.classList.remove('hidden');
+                
+                // Petit délai pour lancer la transition Tailwind
+                setTimeout(() => {
+                    sidebar.classList.remove('translate-x-full');
+                    sidebar.classList.add('translate-x-0');
+                    backdrop.classList.remove('opacity-0');
+                    backdrop.classList.add('opacity-100');
+                }, 20);
+            }
+
+            window.renderCartesCompetences();
+        };
+
+        window.fermerSidebarCorrection = function() {
+            window.activeSidebarItemId = null;
+            
+            const sidebar = document.getElementById('correction-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            
+            if (sidebar && backdrop) {
+                sidebar.classList.remove('translate-x-0');
+                sidebar.classList.add('translate-x-full');
+                backdrop.classList.remove('opacity-100');
+                backdrop.classList.add('opacity-0');
+                
+                // Masquer à la fin de la transition d'animation
+                setTimeout(() => {
+                    sidebar.classList.add('hidden');
+                    backdrop.classList.add('hidden');
+                    
+                    // Rétablir l'affichage normal s'il était altéré
+                    const selectTemplate = document.getElementById('sidebar-template-select');
+                    if (selectTemplate && selectTemplate.parentNode) selectTemplate.parentNode.classList.remove('hidden');
+                    const agreementSelect = document.getElementById('sidebar-agreement-select');
+                    if (agreementSelect && agreementSelect.parentNode) agreementSelect.parentNode.classList.remove('hidden');
+                    const btnRow = sidebar.querySelector('.flex.space-x-2');
+                    if (btnRow && btnRow.parentNode) btnRow.parentNode.classList.remove('hidden');
+                    
+                    const commentArea = document.getElementById('sidebar-comment-area');
+                    if (commentArea) {
+                        commentArea.disabled = false;
+                        commentArea.value = '';
+                    }
+                }, 300);
+            }
+            window.renderCartesCompetences();
+        };
+
+        // --- GESTION ET COMPORTEMENT DE LA CORRESPONDANCE ET DE L'ACCORD DE L'ENSEIGNANT ---
+        window.adapterAccordEnseignant = function(accordVal) {
+            if (!window.activeSidebarItemId) return;
+            
+            const currentItemEval = window.appState.donnees[window.activeSidebarItemId] || { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+            const eleveLvl = currentItemEval.eleveEval;
+
+            if (!eleveLvl) {
+                alert("L'élève n'a pas encore fait d'auto-évaluation sur cet attendu. Vous devez cocher directement son niveau de validation en cliquant sur les boutons d'acquisition de l'étape 2.");
+                // Réinitialiser le sélecteur d'accord
+                document.getElementById('sidebar-agreement-select').value = "";
+                return;
+            }
+
+            let nouveauProfLvl = eleveLvl;
+
+            if (accordVal === 'd_accord') {
+                nouveauProfLvl = eleveLvl;
+            } else if (accordVal === 'desaccord_surevalue') {
+                // S'il s'est surévalué, le prof baisse d'un cran
+                if (eleveLvl === 'acquis') nouveauProfLvl = 'en_voie';
+                else if (eleveLvl === 'en_voie') nouveauProfLvl = 'non_acquis';
+                else nouveauProfLvl = 'non_acquis';
+            } else if (accordVal === 'desaccord_sous_estime') {
+                // S'il s'est sous-estimé, le prof monte d'un cran
+                if (eleveLvl === 'non_acquis') nouveauProfLvl = 'en_voie';
+                else if (eleveLvl === 'en_voie') nouveauProfLvl = 'acquis';
+                else nouveauProfLvl = 'acquis';
+            }
+
+            // Enregistrer l'accord et le niveau
+            if (!window.appState.donnees[window.activeSidebarItemId]) {
+                window.appState.donnees[window.activeSidebarItemId] = { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+            }
+            window.appState.donnees[window.activeSidebarItemId].profAccord = accordVal;
+            window.appState.donnees[window.activeSidebarItemId].profEval = nouveauProfLvl;
+
+            // Mettre à jour l'interface en direct
+            window.actualiserBoutonsProfEvalVisual(nouveauProfLvl);
+            window.rechargerSuggestionsCommentaires();
+            window.enregistrerProfEval(window.activeSidebarItemId, nouveauProfLvl);
+        };
+
+        window.selectionnerProfEvalDirect = function(lvlVal) {
+            if (!window.activeSidebarItemId) return;
+            
+            if (!window.appState.donnees[window.activeSidebarItemId]) {
+                window.appState.donnees[window.activeSidebarItemId] = { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+            }
+            window.appState.donnees[window.activeSidebarItemId].profEval = lvlVal;
+            
+            // Recalculer l'accord de manière intelligente par rapport à la saisie directe
+            const eleveLvl = window.appState.donnees[window.activeSidebarItemId].eleveEval;
+            let accordCalc = "";
+            if (eleveLvl) {
+                if (eleveLvl === lvlVal) {
+                    accordCalc = "d_accord";
+                } else if (
+                    (eleveLvl === 'acquis' && lvlVal !== 'acquis') ||
+                    (eleveLvl === 'en_voie' && lvlVal === 'non_acquis')
+                ) {
+                    accordCalc = "desaccord_surevalue";
+                } else {
+                    accordCalc = "desaccord_sous_estime";
+                }
+            }
+            
+            window.appState.donnees[window.activeSidebarItemId].profAccord = accordCalc;
+            const agreementSelect = document.getElementById('sidebar-agreement-select');
+            if (agreementSelect) agreementSelect.value = accordCalc;
+
+            window.actualiserBoutonsProfEvalVisual(lvlVal);
+            window.rechargerSuggestionsCommentaires();
+            window.enregistrerProfEval(window.activeSidebarItemId, lvlVal);
+        };
+
+        window.actualiserBoutonsProfEvalVisual = function(activeLvl) {
+            const btns = {
+                'non_acquis': document.getElementById('prof-btn-non_acquis'),
+                'en_voie': document.getElementById('prof-btn-en_voie'),
+                'acquis': document.getElementById('prof-btn-acquis')
+            };
+
+            for (let k in btns) {
+                if (!btns[k]) continue;
+                if (k === activeLvl) {
+                    if (k === 'non_acquis') btns[k].className = "flex-1 py-3 px-3 bg-red-600 text-white border-red-600 text-[11px] font-black rounded-xl shadow-md transition-all";
+                    if (k === 'en_voie') btns[k].className = "flex-1 py-3 px-3 bg-amber-500 text-white border-amber-500 text-[11px] font-black rounded-xl shadow-md transition-all";
+                    if (k === 'acquis') btns[k].className = "flex-1 py-3 px-3 bg-emerald-600 text-white border-emerald-600 text-[11px] font-black rounded-xl shadow-md transition-all";
+                } else {
+                    btns[k].className = "flex-1 py-3 px-3 bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 text-[11px] font-bold rounded-xl transition-all";
+                }
+            }
+        };
+
+        // --- CONSTRUCTEUR DE RETOURS ET SUGGESTIONS ADAPTATIFS ---
+        window.rechargerSuggestionsCommentaires = function() {
+            const selectTemplate = document.getElementById('sidebar-template-select');
+            if (!selectTemplate || !window.activeSidebarItemId) return;
+
+            const ev = window.appState.donnees[window.activeSidebarItemId] || { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+            const itemInfo = trouverItemParId(window.activeSidebarItemId);
+            const vulgarisation = itemInfo ? itemInfo.item.vulgarisation : "";
+            const cleanVulgarisation = vulgarisation ? vulgarisation.charAt(0).toLowerCase() + vulgarisation.slice(1) : "";
+
+            selectTemplate.innerHTML = '';
+            
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.disabled = true;
+            defaultOpt.selected = true;
+            defaultOpt.innerText = "-- Choisir un feed-back rapide --";
+            selectTemplate.appendChild(defaultOpt);
+
+            let templates = [];
+
+            if (ev.profAccord === 'd_accord') {
+                if (ev.profEval === 'acquis') {
+                    templates = [
+                        { label: "Accord : Excellent travail", text: `Je suis tout à fait d'accord avec ton auto-évaluation. Tu as fourni un travail rigoureux et tu maîtrises parfaitement cet objectif : ${cleanVulgarisation}. Continue ainsi !` },
+                        { label: "Accord : Acquis validé", text: `C'est tout à fait correct. Cet attendu est validé avec succès. Tu as bien compris comment ${cleanVulgarisation}.` }
+                    ];
+                } else if (ev.profEval === 'en_voie') {
+                    templates = [
+                        { label: "Accord : En bonne voie", text: `Tu as raison, cet objectif est presque atteint. Tu commences à bien comprendre, mais il reste de petites erreurs. Continue tes efforts pour bien ${cleanVulgarisation}.` },
+                        { label: "Accord : Analyse lucide", text: `Bravo pour ta lucidité. C'est en bonne voie. On sent que tu as fourni un effort mais que tu as encore besoin d'un petit entraînement pour ${cleanVulgarisation}.` }
+                    ];
+                } else {
+                    templates = [
+                        { label: "Accord : Difficultés partagées", text: `C'est courageux et réaliste de ta part d'identifier cette difficulté. En effet, tu as encore besoin d'aide pour ${cleanVulgarisation}. Nous allons travailler cela ensemble.` },
+                        { label: "Accord : Soutien nécessaire", text: `Rassure-toi, nous allons reprendre ces explications. Tu as bien fait de pointer ce critère comme non acquis, cela m'indique qu'il faut que je t'aide à ${cleanVulgarisation}.` }
+                    ];
+                }
+            } else if (ev.profAccord === 'desaccord_surevalue') {
+                templates = [
+                    { label: "Désaccord : Rigueur requise", text: `Attention, tu penses avoir entièrement validé cet attendu, mais le travail rendu montre encore d'importantes lacunes. Prends le temps de relire ta méthode pour mieux ${cleanVulgarisation}.` },
+                    { label: "Désaccord : En voie, non acquis", text: `Attention aux détails ! Tu as estimé avoir acquis la compétence, mais plusieurs critères indispensables manquent à l'appel. Entraîne-toi encore pour ${cleanVulgarisation}.` },
+                    { label: "Désaccord : Reprendre les bases", text: `La maîtrise de cet attendu est encore trop fragile pour la considérer comme validée. Nous allons revoir les étapes pour t'aider à ${cleanVulgarisation}.` }
+                ];
+            } else if (ev.profAccord === 'desaccord_sous_estime') {
+                templates = [
+                    { label: "Désaccord : Fais-toi confiance !", text: `Tu as sous-estimé ton travail ! Tes réponses et ton implication montrent que tu maîtrises déjà très bien cet attendu. Fais-toi confiance : tu sais parfaitement ${cleanVulgarisation}.` },
+                    { label: "Désaccord : Bonne surprise", text: `Excellente surprise lors de la correction : ta production est bien meilleure que ce que tu as estimé ! Tu as validé cet objectif pour ${cleanVulgarisation}.` },
+                    { label: "Désaccord : Niveau supérieur atteint", text: `Tu as coché 'Non Acquis', mais ton évaluation démontre que tu as déjà d'excellents réflexes et que tu commences à bien ${cleanVulgarisation}. Bravo !` }
+                ];
+            } else {
+                // Pas encore d'accord défini, suggestions de base
+                templates = [
+                    { label: "Générique : Attendu maîtrisé", text: `Objectif atteint avec succès. Tu as montré de la rigueur pour ${cleanVulgarisation}.` },
+                    { label: "Générique : Des progrès visibles", text: `Des progrès sont visibles mais un effort régulier reste nécessaire pour bien ${cleanVulgarisation}.` },
+                    { label: "Générique : Soutien requis", text: `Notion importante à travailler en priorité pour ${cleanVulgarisation}.` }
+                ];
+            }
+
+            templates.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.text;
+                opt.innerText = t.label;
+                selectTemplate.appendChild(opt);
+            });
+        };
+
+        window.ouvrirAideCommentaire = function(compId, desc) {
+            window.activeSidebarItemId = compId;
+            const sidebar = document.getElementById('correction-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const targetTitle = document.getElementById('correction-target-title');
+            const commentArea = document.getElementById('sidebar-comment-area');
+
+            if (targetTitle) targetTitle.innerText = `Remarque de l'enseignant pour : "${desc}"`;
+            
+            const savedData = window.appState.donnees[compId] || { profComment: '' };
+            if (commentArea) {
+                commentArea.value = savedData.profComment || '';
+                commentArea.disabled = true; // Empêcher l'édition par l'élève
+            }
+
+            if (sidebar && backdrop) {
+                // Cacher les contrôles de correction pour l'élève
+                const selectTemplate = document.getElementById('sidebar-template-select');
+                if (selectTemplate && selectTemplate.parentNode) selectTemplate.parentNode.classList.add('hidden');
+                const agreementSelect = document.getElementById('sidebar-agreement-select');
+                if (agreementSelect && agreementSelect.parentNode) agreementSelect.parentNode.classList.add('hidden');
+                const btnRow = sidebar.querySelector('.flex.space-x-2');
+                if (btnRow && btnRow.parentNode) btnRow.parentNode.classList.add('hidden');
+                const saveBtn = sidebar.querySelector('.p-6.border-t.border-slate-100');
+                if (saveBtn) saveBtn.classList.add('hidden');
+
+                sidebar.classList.remove('hidden');
+                backdrop.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    sidebar.classList.remove('translate-x-full');
+                    sidebar.classList.add('translate-x-0');
+                    backdrop.classList.remove('opacity-0');
+                    backdrop.classList.add('opacity-100');
+                }, 20);
+            }
+        };
+
+        window.changerRole = function(role) {
+            window.appState.vueActive = role;
+            const btnEleve = document.getElementById('role-eleve');
+            const btnProf = document.getElementById('role-prof');
+            const tDashboard = document.getElementById('teacher-dashboard');
+            const commGenBlock = document.getElementById('bloc-commentaire-general-prof');
+            const exportBlock = document.getElementById('bloc-export-prof');
+            const zoneExpl = document.getElementById('zone-explication');
+            const titreExpl = document.getElementById('titre-explication');
+            const texteExpl = document.getElementById('texte-explication');
+            const etapesContainer = document.getElementById('etapes-eleve-container');
+            const zoneTermine = document.getElementById('zone-validation-eleve');
+            const interactiveGuide = document.getElementById('teacher-interactive-guide');
+            
+            if (role === 'eleve') {
+                if (btnEleve) btnEleve.className = "flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 bg-white text-blue-700 shadow-sm";
+                if (btnProf) btnProf.className = "flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 text-slate-600 hover:text-slate-900";
+                if (tDashboard) tDashboard.classList.add('hidden');
+                if (commGenBlock) commGenBlock.classList.add('hidden');
+                if (exportBlock) exportBlock.classList.add('hidden');
+                if (zoneTermine) zoneTermine.classList.remove('hidden');
+                if (etapesContainer) etapesContainer.classList.remove('hidden');
+                if (texteExpl) texteExpl.classList.add('hidden');
+                if (interactiveGuide) interactiveGuide.classList.add('hidden');
+                
+                window.currentSelectedStudentId = null;
+                window.appState.identite = JSON.parse(JSON.stringify(window.myOwnStudentData.identite));
+                window.appState.donnees = JSON.parse(JSON.stringify(window.myOwnStudentData.donnees));
+                window.appState.commentaireGeneral = window.myOwnStudentData.commentaireGeneral || '';
+                window.appState.termine = window.myOwnStudentData.termine;
+                
+                window.chargerIdentiteVisuelle();
+                
+                const btnTermine = document.getElementById('btn-termine');
+                if (btnTermine) {
+                    if (window.appState.termine) {
+                        btnTermine.innerHTML = "Auto-évaluation envoyée et téléchargée ! ✓";
+                        btnTermine.className = "w-full bg-emerald-600 text-white text-sm font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-emerald-100 transition-all cursor-default flex items-center justify-center space-x-2";
+                    } else {
+                        btnTermine.innerHTML = `
+                            <svg class="h-5 w-5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            <span>J'ai terminé mon auto-évaluation ! 🚀</span>
+                        `;
+                        btnTermine.className = "w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-extrabold py-4 px-6 rounded-2xl shadow-lg shadow-blue-100 transition-all flex items-center justify-center space-x-2";
+                    }
+                }
+                
+                if (zoneExpl) zoneExpl.className = "bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-950 text-white rounded-3xl p-8 mb-8 shadow-xl shadow-blue-100 relative overflow-hidden";
+                if (titreExpl) titreExpl.innerText = "Prends le contrôle de tes apprentissages ! 🚀";
+                
+                const diagPanel = document.getElementById('diagnostic-panel');
+                if (diagPanel) diagPanel.classList.add('hidden');
+            } else {
+                if (btnProf) btnProf.className = "flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 bg-white text-blue-700 shadow-sm";
+                if (btnEleve) btnEleve.className = "flex items-center space-x-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 text-slate-600 hover:text-slate-900";
+                if (tDashboard) tDashboard.classList.remove('hidden');
+                if (commGenBlock) commGenBlock.classList.remove('hidden');
+                if (exportBlock) exportBlock.classList.remove('hidden');
+                if (zoneTermine) zoneTermine.classList.add('hidden');
+                if (etapesContainer) etapesContainer.classList.add('hidden');
+                if (texteExpl) texteExpl.classList.remove('hidden');
+                
+                window.myOwnStudentData = {
+                    identite: JSON.parse(JSON.stringify(window.appState.identite)),
+                    donnees: JSON.parse(JSON.stringify(window.appState.donnees)),
+                    commentaireGeneral: window.appState.commentaireGeneral || '',
+                    termine: window.appState.termine
+                };
+                
+                if (!window.currentSelectedStudentId) {
+                    window.appState.identite = { nom: '', prenom: '', classe: '' };
+                    window.appState.donnees = {};
+                    window.appState.commentaireGeneral = '';
+                    window.chargerIdentiteVisuelle();
+                    if (interactiveGuide) interactiveGuide.classList.add('hidden');
+                    
+                    const btnWord = document.getElementById('btn-export-word');
+                    if(btnWord) {
+                        btnWord.className = "bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition-all flex items-center space-x-1.5 opacity-50 cursor-not-allowed";
+                        btnWord.setAttribute('disabled', 'true');
+                    }
+                    const txtWord = document.getElementById('text-export-word');
+                    if(txtWord) {
+                        txtWord.innerText = "Fiche Élève (Word)";
+                    }
+                } else {
+                    if (interactiveGuide) interactiveGuide.classList.remove('hidden');
+                }
+                
+                // Amélioration de la lisibilité : fond Slate / Indigo foncé de haute qualité, texte blanc/ambre très lisible
+                if (zoneExpl) zoneExpl.className = "bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-8 mb-8 shadow-xl relative overflow-hidden border border-slate-800";
+                if (titreExpl) titreExpl.innerText = "Espace Correction Enseignant";
+                if (texteExpl) {
+                    if (window.currentSelectedStudentId) {
+                        texteExpl.innerHTML = `💼 Dossier d'auto-évaluation de <strong class="text-amber-300 font-extrabold">${window.appState.identite.prenom} ${window.appState.identite.nom.toUpperCase()}</strong> actif. Naviguez dans les onglets, cliquez sur « Saisir » dans la colonne Enseignant pour évaluer avec retour automatique.`;
+                    } else {
+                        texteExpl.innerHTML = `👋 Bienvenue dans l'espace de correction. Veuillez sélectionner un élève dans la liste du tableau de bord ci-dessus ou importer un fichier <strong class="text-amber-300">.json</strong> reçu de Teams pour démarrer l'analyse.`;
+                    }
+                }
+                
+                ecouterListeElevesEnseignant();
+                window.renderDiagnosticGlobal();
+            }
+            window.fermerSidebarCorrection();
+            window.renderCartesCompetences();
+            window.lancerNotification(`Passage en vue ${role === 'eleve' ? 'Élève' : 'Enseignant'}`);
+        };
+
+        window.selectionnerMatiere = function(matiereId) {
+            window.appState.matiereActive = matiereId;
+            window.appState.categorieActive = 'Savoir'; 
+            window.renderFiltresMatieres();
+            window.selectionnerCategorie('Savoir');
+        };
+
+        window.enregistrerAutoEval = function(compId, valeur) {
+            if (!window.appState.donnees[compId]) window.appState.donnees[compId] = { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+            window.appState.donnees[compId].eleveEval = valeur;
+            window.renderCartesCompetences();
+            window.lancerNotification("Auto-évaluation mise à jour.");
+            window.triggerAutoSync();
+        };
+
+        window.enregistrerProfCommentDepuisSidebar = function(texte) {
+            if (!window.activeSidebarItemId) return;
+            window.enregistrerProfComment(window.activeSidebarItemId, texte);
+        };
+
+        window.appliquerCommentaireSidebar = function(texte) {
+            if (!window.activeSidebarItemId) return;
+            window.appliquerCommentaireType(window.activeSidebarItemId, texte);
+            const commentArea = document.getElementById('sidebar-comment-area');
+            if (commentArea) commentArea.value = texte;
+        };
+
+        window.enregistrerProfEval = function(compId, valeur) {
+            if (!window.appState.donnees[compId]) window.appState.donnees[compId] = { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+            window.appState.donnees[compId].profEval = valeur;
+            window.renderCartesCompetences();
+            window.renderDiagnosticGlobal();
+            window.lancerNotification(`Validation mise à jour.`);
+            
+            if (window.currentSelectedStudentId === "simulation-local-id" || window.currentSelectedStudentId.startsWith("import_")) {
+                cacheListeEleves[window.currentSelectedStudentId].donnees = JSON.parse(JSON.stringify(window.appState.donnees));
+                
+                if (window.currentSelectedStudentId === "simulation-local-id") {
+                    window.myOwnStudentData.donnees = JSON.parse(JSON.stringify(window.appState.donnees));
+                    localStorage.setItem('ar_binche_evaluation_locale_v2', JSON.stringify(window.myOwnStudentData));
+                }
+            } else if (window.currentSelectedStudentId) {
+                const paquet = { 
+                    identite: window.appState.identite, 
+                    donnees: window.appState.donnees, 
+                    commentaireGeneral: window.appState.commentaireGeneral || '',
+                    termine: true, 
+                    timestamp: new Date().getTime() 
+                };
+                window.enregistrerCorrectionProfVersCloud(window.currentSelectedStudentId, paquet);
+            } else {
+                window.triggerAutoSync();
+            }
+        };
+
+        window.enregistrerProfComment = function(compId, texte) {
+            if (!window.appState.donnees[compId]) window.appState.donnees[compId] = { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+            window.appState.donnees[compId].profComment = texte;
+            
+            if (window.currentSelectedStudentId === "simulation-local-id" || window.currentSelectedStudentId.startsWith("import_")) {
+                cacheListeEleves[window.currentSelectedStudentId].donnees = JSON.parse(JSON.stringify(window.appState.donnees));
+                
+                if (window.currentSelectedStudentId === "simulation-local-id") {
+                    window.myOwnStudentData.donnees = JSON.parse(JSON.stringify(window.appState.donnees));
+                    localStorage.setItem('ar_binche_evaluation_locale_v2', JSON.stringify(window.myOwnStudentData));
+                }
+            } else if (window.currentSelectedStudentId) {
+                const paquet = { 
+                    identite: window.appState.identite, 
+                    donnees: window.appState.donnees, 
+                    commentaireGeneral: window.appState.commentaireGeneral || '',
+                    termine: true, 
+                    timestamp: new Date().getTime() 
+                };
+                window.enregistrerCorrectionProfVersCloud(window.currentSelectedStudentId, paquet);
+            } else {
+                window.triggerAutoSync();
+            }
+        };
+
+        window.appliquerCommentaireType = function(compId, texteCommentaire) {
+            if (!window.appState.donnees[compId]) window.appState.donnees[compId] = { eleveEval: '', profEval: '', profAccord: '', profComment: '' };
+            window.appState.donnees[compId].profComment = texteCommentaire;
+            window.lancerNotification("Commentaire type appliqué.");
+            
+            if (window.currentSelectedStudentId === "simulation-local-id" || window.currentSelectedStudentId.startsWith("import_")) {
+                cacheListeEleves[window.currentSelectedStudentId].donnees = JSON.parse(JSON.stringify(window.appState.donnees));
+                
+                if (window.currentSelectedStudentId === "simulation-local-id") {
+                    window.myOwnStudentData.donnees = JSON.parse(JSON.stringify(window.appState.donnees));
+                    localStorage.setItem('ar_binche_evaluation_locale_v2', JSON.stringify(window.myOwnStudentData));
+                }
+            } else if (window.currentSelectedStudentId) {
+                const paquet = { 
+                    identite: window.appState.identite, 
+                    donnees: window.appState.donnees, 
+                    commentaireGeneral: window.appState.commentaireGeneral || '',
+                    termine: true, 
+                    timestamp: new Date().getTime() 
+                };
+                window.enregistrerCorrectionProfVersCloud(window.currentSelectedStudentId, paquet);
+            } else {
+                window.triggerAutoSync();
+            }
+        };
+
+        window.lancerNotification = function(texte) {
+            const toast = document.getElementById('notification-toast');
+            const toastText = document.getElementById('notification-text');
+            if(!toast || !toastText) return;
+            toastText.innerText = texte;
+            toast.className = toast.className.replace('translate-y-24 opacity-0', 'translate-y-0 opacity-100');
+            setTimeout(() => {
+                toast.className = toast.className.replace('translate-y-0 opacity-100', 'translate-y-24 opacity-0');
+            }, 2500);
+        };
+
+        // --- ENSEIGNANT PIN MODAL ---
+        window.demanderCodeAcces = function() {
+            const pinModal = document.getElementById('pin-modal');
+            const pinInput = document.getElementById('pin-input');
+            const pinError = document.getElementById('pin-error');
+            if (pinModal) pinModal.classList.remove('hidden');
+            if (pinInput) { pinInput.value = ""; pinInput.focus(); }
+            if (pinError) pinError.classList.add('hidden');
+        };
+
+        window.fermerPinModal = function() {
+            const pinModal = document.getElementById('pin-modal');
+            if (pinModal) pinModal.classList.add('hidden');
+        };
+
+        window.validerPin = function() {
+            const pinInput = document.getElementById('pin-input');
+            const pinError = document.getElementById('pin-error');
+            const input = pinInput ? pinInput.value : "";
+            if (btoa(input) === "MTIzNA==") {
+                window.fermerPinModal();
+                window.changerRole('prof');
+            } else {
+                if (pinError) pinError.classList.remove('hidden');
+                if (pinInput) { pinInput.value = ""; pinInput.focus(); }
+            }
+        };
+
+        // Support d'envoi du code PIN par pression sur la touche Entrée
+        document.getElementById('pin-input')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                window.validerPin();
+            }
+        });
+
+        // Déclencheur au démarrage
+        document.addEventListener("DOMContentLoaded", () => {
+            initialiserFirebaseEtCharger();
+        });
+    </script>
+</body>
+</html>
