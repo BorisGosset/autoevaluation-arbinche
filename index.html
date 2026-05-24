@@ -99,30 +99,30 @@
             </div>
         </div>
 
-        <!-- ZONE ENSEIGNANT : TABLEAU DE BORD (Visible uniquement pour le prof) -->
-        <div id="teacher-dashboard" class="bg-slate-900 text-white rounded-2xl p-6 mb-6 shadow-sm hidden border border-slate-800">
+        <!-- ZONE ENSEIGNANT : TABLEAU DE BORD (Visuellement harmonisé et épuré) -->
+        <div id="teacher-dashboard" class="bg-slate-50 rounded-2xl p-6 mb-6 shadow-xs hidden border border-slate-200/80">
             
             <!-- 1. ENTÊTE DU DASHBOARD AVEC TITRE -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-4 border-b border-slate-800 gap-3">
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-4 border-b border-slate-200 gap-3">
                 <div>
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center">
-                        <span class="inline-block h-2 w-2 rounded-full bg-indigo-400 animate-pulse mr-2"></span>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-600 flex items-center">
+                        <span class="inline-block h-2 w-2 rounded-full bg-indigo-500 animate-pulse mr-2"></span>
                         Tableau de bord de correction
                     </h3>
-                    <p class="text-[11px] text-slate-400 mt-1">
+                    <p class="text-[11px] text-slate-500 mt-1">
                         Gérez, évaluez et visualisez les productions de vos classes de 1ère secondaire en temps réel.
                     </p>
                 </div>
-                <div class="text-[10px] font-bold text-emerald-400 bg-emerald-950/40 px-2.5 py-1 rounded-md border border-emerald-800/30">
+                <div class="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
                     Session validée ✓
                 </div>
             </div>
 
             <!-- 2. SECTION LISTE DES ÉLÈVES -->
-            <div class="mb-5 bg-slate-950 rounded-xl p-4 border border-slate-800">
+            <div class="mb-5 bg-white rounded-xl p-4 border border-slate-200/70 shadow-2xs">
                 <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center">
-                        <svg class="h-3.5 w-3.5 mr-1.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <h4 class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center">
+                        <svg class="h-3.5 w-3.5 mr-1.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         Copies soumises par les élèves :
@@ -134,12 +134,12 @@
             </div>
 
             <!-- 2.5 Aperçu global de l'auto-évaluation par couleur de l'élève sélectionné -->
-            <div id="diagnostic-panel" class="mb-5 bg-slate-950 rounded-xl p-4 border border-slate-800 hidden">
-                <h4 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center mb-3">
-                    <svg class="h-3.5 w-3.5 mr-1.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <div id="diagnostic-panel" class="mb-5 bg-white rounded-xl p-4 border border-slate-200/70 shadow-2xs hidden">
+                <h4 class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center mb-3">
+                    <svg class="h-3.5 w-3.5 mr-1.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
-                    Profil de compétences de <span id="diagnostic-student-name" class="text-indigo-400 ml-1 font-black">l'élève</span> :
+                    Profil de compétences de <span id="diagnostic-student-name" class="text-indigo-600 ml-1 font-black">l'élève</span> :
                 </h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5" id="diagnostic-cards-container">
                     <!-- Les fiches de couleur par matière s'injectent ici par JS -->
@@ -147,15 +147,15 @@
             </div>
 
             <!-- CONSIGNES PRATIQUES -->
-            <div id="teacher-interactive-guide" class="mb-2 bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-300 flex items-start space-x-3 hidden">
-                <div class="bg-indigo-950 text-indigo-400 p-1.5 rounded-lg shrink-0 border border-indigo-900">
+            <div id="teacher-interactive-guide" class="mb-2 bg-indigo-50/50 border border-indigo-100 rounded-xl p-3.5 text-xs text-indigo-900 flex items-start space-x-3 hidden">
+                <div class="bg-white text-indigo-600 p-1.5 rounded-lg shrink-0 border border-indigo-100/80 shadow-2xs">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
                 <div>
-                    <p class="font-bold text-indigo-300 uppercase tracking-wider text-[10px]">💡 Évaluation des attendus & Feedback</p>
-                    <p class="mt-1 text-[11px] leading-relaxed text-slate-400 font-medium">
+                    <p class="font-bold text-indigo-950 uppercase tracking-wider text-[10px]">💡 Évaluation des attendus & Feedback</p>
+                    <p class="mt-1 text-[11px] leading-relaxed text-slate-600 font-medium">
                         Pour attribuer des remarques individuelles, cliquez sur **« Saisir »** dans la colonne de droite. Un **volet de correction coulissant** apparaîtra avec les listes de commentaires automatisés et les niveaux d'accord.
                     </p>
                 </div>
@@ -163,40 +163,41 @@
 
         </div>
 
-        <!-- ZONE D'EXPLICATION DISCRÈTE ET PROFESSIONNELLE -->
-        <div id="zone-explication" class="bg-slate-900 text-white rounded-2xl p-6 mb-6 shadow-sm border border-slate-800 relative overflow-hidden">
-            <div class="relative z-10 w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <span id="badge-explication" class="bg-indigo-950 text-indigo-300 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border border-indigo-900">
+        <!-- ZONE D'EXPLICATION DOUCE ET ACADÉMIQUE -->
+        <div id="zone-explication" class="bg-indigo-50/50 rounded-2xl p-6 mb-6 border border-indigo-100/80 relative overflow-hidden">
+            <div class="relative z-10 w-full flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div class="max-w-xl">
+                    <span id="badge-explication" class="bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border border-indigo-200/50">
                         Référentiel FWB • Auto-évaluation formative
                     </span>
-                    <h2 id="titre-explication" class="text-xl font-bold mt-2 text-slate-100">Suivi des acquis d'apprentissage</h2>
-                    <p id="texte-explication" class="text-slate-400 text-xs mt-1.5 leading-relaxed max-w-2xl">
-                        Cet espace te permet de faire le point sur tes connaissances, tes savoir-faire et tes compétences. Prends le temps de lire chaque énoncé avec attention.
+                    <h2 id="titre-explication" class="text-lg font-bold mt-2.5 text-slate-900">Suivi des acquis d'apprentissage</h2>
+                    <p id="texte-explication" class="text-slate-600 text-xs mt-1.5 leading-relaxed">
+                        Cet espace te permet de faire le point sur tes connaissances, tes savoir-faire et tes compétences. Prends le temps de lire chaque énoncé avec attention pour mesurer ta progression.
                     </p>
                 </div>
 
-                <!-- Les 3 étapes de manière très compacte -->
-                <div id="etapes-eleve-container" class="flex flex-col sm:flex-row gap-3 md:max-w-md w-full shrink-0">
-                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex-1 flex items-start space-x-2">
-                        <span class="text-[10px] bg-slate-800 text-slate-400 w-5 h-5 rounded-full flex items-center justify-center font-bold shrink-0">1</span>
-                        <div class="text-[11px] text-slate-300">
-                            <span class="font-bold text-slate-100 block">Matière</span>
-                            Sélectionne ta discipline.
+                <!-- Les 3 étapes de manière très claire -->
+                <div id="etapes-eleve-container" class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 lg:max-w-2xl w-full shrink-0">
+                    <div class="bg-white border border-slate-200/70 p-3.5 rounded-xl flex items-start space-x-2.5 shadow-2xs">
+                        <span class="text-xs bg-indigo-50 text-indigo-600 w-5.5 h-5.5 rounded-md flex items-center justify-center font-bold shrink-0 border border-indigo-100">1</span>
+                        <div class="text-[11px] text-slate-600 leading-normal">
+                            <span class="font-bold text-slate-850 block">1. Matière</span>
+                            Sélectionne la matière à évaluer dans le panneau ci-dessous (Histoire, Géo ou Éco).
                         </div>
                     </div>
-                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex-1 flex items-start space-x-2">
-                        <span class="text-[10px] bg-slate-800 text-slate-400 w-5 h-5 rounded-full flex items-center justify-center font-bold shrink-0">2</span>
-                        <div class="text-[11px] text-slate-300">
-                            <span class="font-bold text-slate-100 block">Onglets</span>
-                            Coche tes réponses (S, SF, C).
+                    <div class="bg-white border border-indigo-200 p-3.5 rounded-xl flex items-start space-x-2.5 shadow-2xs relative">
+                        <div class="absolute -top-1.5 right-2 bg-indigo-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">Crucial</div>
+                        <span class="text-xs bg-indigo-50 text-indigo-600 w-5.5 h-5.5 rounded-md flex items-center justify-center font-bold shrink-0 border border-indigo-100">2</span>
+                        <div class="text-[11px] text-slate-600 leading-normal">
+                            <span class="font-bold text-slate-850 block">2. Trois Onglets</span>
+                            Complète impérativement **Savoirs, Savoir-faire ET Compétences** pour la matière choisie.
                         </div>
                     </div>
-                    <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex-1 flex items-start space-x-2">
-                        <span class="text-[10px] bg-slate-800 text-slate-400 w-5 h-5 rounded-full flex items-center justify-center font-bold shrink-0">3</span>
-                        <div class="text-[11px] text-slate-300">
-                            <span class="font-bold text-slate-100 block">Valider</span>
-                            Enregistre ta copie en ligne.
+                    <div class="bg-white border border-slate-200/70 p-3.5 rounded-xl flex items-start space-x-2.5 shadow-2xs">
+                        <span class="text-xs bg-indigo-50 text-indigo-600 w-5.5 h-5.5 rounded-md flex items-center justify-center font-bold shrink-0 border border-indigo-100">3</span>
+                        <div class="text-[11px] text-slate-600 leading-normal">
+                            <span class="font-bold text-slate-850 block">3. Validation</span>
+                            Clique sur le bouton noir en bas. Une checklist confirmera ton avancement.
                         </div>
                     </div>
                 </div>
@@ -566,7 +567,7 @@
                     { id: 'h-sf6', description: "Sélectionner une information en référence à un repère temporel, une thématique en recourant à un portail numérique.", vulgarisation: "Trouver une information d'histoire précise sur un site ou encyclopédie en ligne (comme Vikidia) en tapant des mots-clés." },
                     { id: 'h-sf7', description: "Distinguer la date de production d’un document de la date ou de la période évoquée dans ce document.", vulgarisation: "Faire la différence entre le moment où le texte a été écrit (ex: un livre de 2024) et l'époque dont il parle (ex: la vie de Jules César en -44)." },
                     { id: 'h-sf8', description: "Identifier, dans un texte court, une cause et une conséquence explicite d’un fait ou d’un changement.", vulgarisation: "Repérer dans un texte d'histoire 'pourquoi' quelque chose s'est passé (la cause) et 'ce que cela a provoqué' (la conséquence)." },
-                    { id: 'h-sf9', description: "Comparer deux documents de nature différente pour identifier des ressemblances et des différences.", vulgarisation: "Analyser deux documents (ex: un texte et une œuvre d'art) pour écrire ce qui est identique et ce qui diffère." },
+                    { id: 'h-sf9', description: "Comparer deux documents de nature différente pour identifier des ressemblances et des différences.", vulgarisation: "Analyse deux documents (ex: un texte et une œuvre d'art) pour écrire ce qui est identique et ce qui diffère." },
                     { id: 'h-sf10', description: "Sélectionner dans un document des informations utiles pour répondre à une question de recherche.", vulgarisation: "Surligner et recopier uniquement les phrases d'un texte historique qui t'aident à répondre à ta question d'histoire." },
                     { id: 'h-sf11', description: "Organiser dans un tableau à double entrée des informations sélectionnées dans un document.", vulgarisation: "Ranger des informations historiques dans un tableau propre avec des lignes et des colonnes bien nommées." }
                 ],
@@ -588,7 +589,7 @@
                     { id: 'g-s8', description: "Distinguer en quelques mots les espaces qui composent la ville (centre-ville - banlieue - périphérie récente).", vulgarisation: "Expliquer la différence entre le vieux centre historique, les quartiers de maisons résidentielles autour (banlieue) et les zones de commerces plus éloignées (périphérie)." },
                     { id: 'g-s9', description: "Donner un exemple d'espace marqué par : un étalement urbain, une mutation agricole ou la déforestation.", vulgarisation: "Citer un lieu du monde réel étudié en classe pour chaque problème (ex: la forêt d'Amazonie pour la déforestation)." },
                     { id: 'g-s10', description: "Expliquer des liens entre les indicateurs socioéconomiques (travail, argent, conditions de vie...) des populations et l'évolution de l'urbanisation.", vulgarisation: "Montrer le rapport entre le fait que les gens s'installent en ville et leur besoin de trouver un emploi ou d'accéder à de meilleures écoles et hôpitaux." },
-                    { id: 'g-s11', description: "Expliquer pourquoi une activity agricole s'est installée à un endroit en se basant sur les facteurs de localisation (humains et naturels).", vulgarisation: "Expliquer pourquoi un champ se trouve là (facteur naturel = soleil, eau, terre plate ; facteur humain = présence de routes pour transporter les récoltes ou de clients à proximité)." },
+                    { id: 'g-s11', description: "Expliquer why une activity agricole s'est installée à un endroit en se basant sur les facteurs de localisation (humains et naturels).", vulgarisation: "Expliquer pourquoi un champ se trouve là (facteur naturel = soleil, eau, terre plate ; facteur humain = présence de routes pour transporter les récoltes ou de clients à proximité)." },
                     { id: 'g-s12', description: "Caractériser l'occupation du sol d'un space déforesté.", vulgarisation: "Décrire ce qu'on trouve à la place des arbres coupés (ex: des champs de soja ou des pâturages pour vaches)." },
                     { id: 'g-s13', description: "Caractériser un paysage agricole en référence à l'évolution de l'occupation du sol.", vulgarisation: "Faire le portrait d'un paysage de ferme (ex: de grands champs ouverts sans arbres vs de petits champs entourés de haies)." },
                     { id: 'g-s14', description: "Donner un exemple d'un facteur de localisation humain ou naturel d'une activité ou de l'habitat.", vulgarisation: "Citer un élément naturel (ex: la présence d'un fleuve) ou humain (ex: la construction d'une ligne de chemin de fer) qui a poussé les hommes à construire leurs maisons à cet endroit." }
@@ -766,7 +767,7 @@
         };
 
         window.enregistrerCommentaireGeneral = function(texte) {
-            window.appState.commentaireGeneral = texte;
+            window.appState.commentaireGeneral = text = texte;
             
             if (window.currentSelectedStudentId) {
                 if (window.currentSelectedStudentId === "simulation-local-id") {
@@ -1033,7 +1034,7 @@
                 
                 const textExpl = document.getElementById('texte-explication');
                 if (textExpl) {
-                    textExpl.innerHTML = `Mode simulation actif pour <strong class="text-slate-100 font-bold">${window.appState.identite.prenom} ${window.appState.identite.nom.toUpperCase()}</strong>. Évaluez les compétences de l'élève, et générez un feedback global.`;
+                    textExpl.innerHTML = `Mode simulation actif pour <strong class="text-slate-150 font-bold">${window.appState.identite.prenom} ${window.appState.identite.nom.toUpperCase()}</strong>. Évaluez les compétences de l'élève, et générez un feedback global.`;
                 }
                 return;
             }
@@ -1094,23 +1095,23 @@
                 const isSelected = window.currentSelectedStudentId === studentId;
                 
                 const btnStyle = isSelected 
-                    ? "bg-indigo-950 text-indigo-300 border-indigo-800 shadow-sm" 
-                    : "bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800";
+                    ? "bg-indigo-50 text-indigo-700 border-indigo-200 shadow-2xs font-extrabold" 
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50";
                     
                 container.innerHTML += `
                     <button onclick="window.chargerCopieEleve('${studentId}')" class="flex flex-col items-start p-3 rounded-lg border text-left transition-all ${btnStyle}">
                         <span class="font-bold text-xs truncate max-w-full flex items-center gap-1">
                             ${prenom} ${nom.toUpperCase()}
-                            ${studentId === "simulation-local-id" ? '<span class="bg-indigo-500/20 text-indigo-300 px-1 py-0.5 rounded text-[8px] font-bold uppercase">Simulation</span>' : ''}
+                            ${studentId === "simulation-local-id" ? '<span class="bg-indigo-100 text-indigo-800 px-1 py-0.5 rounded text-[8px] font-bold uppercase">Simulation</span>' : ''}
                         </span>
-                        <span class="text-[10px] text-slate-500">Groupe : ${classE}</span>
+                        <span class="text-[10px] text-slate-400">Groupe : ${classE}</span>
                     </button>
                 `;
             });
 
             if (count === 0) {
                 container.innerHTML = `
-                    <div class="col-span-4 p-4 text-center text-slate-500 italic text-xs bg-slate-950 rounded-xl border border-dashed border-slate-800">
+                    <div class="col-span-4 p-4 text-center text-slate-400 italic text-xs bg-white rounded-xl border border-dashed border-slate-200">
                         Aucun élève enregistré en ligne pour le moment.
                     </div>`;
             }
@@ -1203,33 +1204,33 @@
                 const pourcentNonAcquis = complétés > 0 ? Math.round((countNonAcquis / complétés) * 100) : 0;
                 
                 cardsContainer.innerHTML += `
-                    <div class="border border-slate-800 rounded-xl p-3.5 bg-slate-900 flex flex-col justify-between">
+                    <div class="border border-slate-200/80 rounded-xl p-3.5 bg-slate-50 flex flex-col justify-between">
                         <div>
-                            <div class="flex justify-between items-center mb-2 bg-slate-950 p-1.5 rounded-lg border border-slate-800">
-                                <h5 class="font-bold text-[10px] tracking-wide text-slate-200">${mat.nom}</h5>
-                                <span class="text-[9px] text-slate-500">${complétés} / ${totalItems} évalués</span>
+                            <div class="flex justify-between items-center mb-2 bg-white p-1.5 rounded-lg border border-slate-200/60">
+                                <h5 class="font-bold text-[10px] tracking-wide text-slate-800">${mat.nom}</h5>
+                                <span class="text-[9px] text-slate-400">${complétés} / ${totalItems} évalués</span>
                             </div>
                             
-                            <div class="w-full bg-slate-850 h-2 rounded-full overflow-hidden flex mb-3.5">
+                            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden flex mb-3.5">
                                 ${countAcquis > 0 ? `<div class="bg-emerald-500 h-full" style="width: ${pourcentAcquis}%" title="Acquis : ${countAcquis}"></div>` : ''}
                                 ${countEnVoie > 0 ? `<div class="bg-amber-500 h-full" style="width: ${pourcentEnVoie}%" title="En Voie : ${countEnVoie}"></div>` : ''}
                                 ${countNonAcquis > 0 ? `<div class="bg-rose-500 h-full" style="width: ${pourcentNonAcquis}%" title="Non Acquis : ${countNonAcquis}"></div>` : ''}
-                                ${complétés === 0 ? `<div class="bg-slate-800 h-full w-full" title="Aucune donnée"></div>` : ''}
+                                ${complétés === 0 ? `<div class="bg-slate-300 h-full w-full" title="Aucune donnée"></div>` : ''}
                             </div>
                         </div>
                         
-                        <div class="grid grid-cols-3 gap-1.5 text-center text-[9px] font-semibold text-slate-400">
-                            <div class="p-1 rounded bg-slate-950 border border-slate-850">
+                        <div class="grid grid-cols-3 gap-1.5 text-center text-[9px] font-semibold text-slate-500">
+                            <div class="p-1 rounded bg-white border border-slate-200/65">
                                 <p>Acquis</p>
-                                <p class="text-xs font-bold text-emerald-400 mt-0.5">${countAcquis}</p>
+                                <p class="text-xs font-bold text-emerald-600 mt-0.5">${countAcquis}</p>
                             </div>
-                            <div class="p-1 rounded bg-slate-950 border border-slate-850">
+                            <div class="p-1 rounded bg-white border border-slate-200/65">
                                 <p>En Voie</p>
-                                <p class="text-xs font-bold text-amber-400 mt-0.5">${countEnVoie}</p>
+                                <p class="text-xs font-bold text-amber-600 mt-0.5">${countEnVoie}</p>
                             </div>
-                            <div class="p-1 rounded bg-slate-950 border border-slate-850">
+                            <div class="p-1 rounded bg-white border border-slate-200/65">
                                 <p>Non Acq.</p>
-                                <p class="text-xs font-bold text-rose-400 mt-0.5">${countNonAcquis}</p>
+                                <p class="text-xs font-bold text-rose-600 mt-0.5">${countNonAcquis}</p>
                             </div>
                         </div>
                     </div>
@@ -1606,8 +1607,6 @@
                         <td style="width: 50%; border: none; text-align: right;"><strong>Signature du professeur</strong></td>
                     </tr>
                 </table>
-            </body>
-            </html>
             `;
 
             const blob = new Blob([htmlDoc], { type: 'application/msword;charset=utf-8' });
@@ -2075,6 +2074,7 @@
             const zoneExpl = document.getElementById('zone-explication');
             const titreExpl = document.getElementById('titre-explication');
             const texteExpl = document.getElementById('texte-explication');
+            const badgeExplication = document.getElementById('badge-explication');
             const etapesContainer = document.getElementById('etapes-eleve-container');
             const zoneTermine = document.getElementById('zone-validation-eleve');
             const interactiveGuide = document.getElementById('teacher-interactive-guide');
@@ -2109,9 +2109,18 @@
                     }
                 }
                 
-                if (zoneExpl) zoneExpl.className = "bg-slate-900 text-white rounded-2xl p-6 mb-6 shadow-sm border border-slate-800 relative overflow-hidden";
-                if (titreExpl) titreExpl.innerText = "Suivi des acquis d'apprentissage";
-                if (texteExpl) texteExpl.innerHTML = "Cet espace te permet de faire le point sur tes connaissances, tes savoir-faire et tes compétences. Prends le temps de lire chaque énoncé avec attention.";
+                if (zoneExpl) zoneExpl.className = "bg-indigo-50/50 rounded-2xl p-6 mb-6 border border-indigo-100/80 relative overflow-hidden";
+                if (titreExpl) {
+                    titreExpl.innerText = "Suivi des acquis d'apprentissage";
+                    titreExpl.className = "text-lg font-bold mt-2.5 text-slate-900";
+                }
+                if (texteExpl) {
+                    texteExpl.innerHTML = "Cet espace te permet de faire le point sur tes connaissances, tes savoir-faire et tes compétences. Prends le temps de lire chaque énoncé avec attention pour mesurer ta progression.";
+                    texteExpl.className = "text-slate-600 text-xs mt-1.5 leading-relaxed max-w-2xl";
+                }
+                if (badgeExplication) {
+                    badgeExplication.className = "bg-indigo-100 text-indigo-800 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border border-indigo-200/50";
+                }
                 
                 const diagPanel = document.getElementById('diagnostic-panel');
                 if (diagPanel) diagPanel.classList.add('hidden');
@@ -2152,14 +2161,21 @@
                     if (interactiveGuide) interactiveGuide.classList.remove('hidden');
                 }
                 
-                if (zoneExpl) zoneExpl.className = "bg-slate-900 text-white rounded-2xl p-6 mb-6 shadow-sm border border-slate-800 relative overflow-hidden";
-                if (titreExpl) titreExpl.innerText = "Évaluation Formative — Sciences Humaines";
+                if (zoneExpl) zoneExpl.className = "bg-slate-100/80 rounded-2xl p-6 mb-6 border border-slate-200 relative overflow-hidden";
+                if (titreExpl) {
+                    titreExpl.innerText = "Évaluation Formative — Sciences Humaines";
+                    titreExpl.className = "text-lg font-bold mt-2.5 text-slate-850";
+                }
                 if (texteExpl) {
                     if (window.currentSelectedStudentId) {
-                        texteExpl.innerHTML = `Fiche d'auto-évaluation de <strong class="text-indigo-400 font-bold">${window.appState.identite.prenom} ${window.appState.identite.nom.toUpperCase()}</strong> active. Saisissez vos retours en cliquant sur le bouton de validation.`;
+                        texteExpl.innerHTML = `Fiche d'auto-évaluation de <strong class="text-indigo-600 font-bold">${window.appState.identite.prenom} ${window.appState.identite.nom.toUpperCase()}</strong> active. Saisissez vos retours en cliquant sur le bouton de validation.`;
                     } else {
-                        texteExpl.innerHTML = `Espace réservé à l'enseignant. Veuillez sélectionner une production d'élève ci-dessus.`;
+                        texteExpl.innerHTML = `Espace réservé à l'enseignant. Veuillez sélectionner une production d'élève ci-dessus pour entamer l'analyse formative.`;
                     }
+                    texteExpl.className = "text-slate-500 text-xs mt-1.5 leading-relaxed max-w-2xl";
+                }
+                if (badgeExplication) {
+                    badgeExplication.className = "bg-slate-200 text-slate-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border border-slate-300";
                 }
                 
                 ecouterListeElevesEnseignant();
