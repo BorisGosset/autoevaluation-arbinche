@@ -527,10 +527,21 @@
 
     <!-- LOGIQUE APPLICATIVE -->
     <script>
-        // Déclaration des variables de configuration
+        // Déclaration des variables de configuration Firebase (Clés réelles du projet ARB intégrées !)
         var auth, db, appId, currentUser = null;
         var defaultAppId = "ar-binche-sc-humaines";
         var cacheListeEleves = {};
+
+        // Configuration Firebase réelle
+        const firebaseConfig = {
+            apiKey: "AIzaSyDoxvO3tBSWDlf1As77G6h_imebGChQ7CM",
+            authDomain: "appli-autoevaluation-arb.firebaseapp.com",
+            projectId: "appli-autoevaluation-arb",
+            storageBucket: "appli-autoevaluation-arb.firebasestorage.app",
+            messagingSenderId: "96350770300",
+            appId: "1:96350770300:web:81bbe9a935d37969ce65f9",
+            measurementId: "G-0CZKB5GGLK"
+        };
 
         // Backup local de l'élève actif pour le test dans le même navigateur
         window.myOwnStudentData = {
@@ -623,7 +634,7 @@
                 'Savoir-faire': [
                     { id: 'es-sf1', description: "Distinguer commerce traditionnel et e-commerce du point de vue tant du consommateur (accès, prix, etc.) que de leurs impacts (environnementaux, sociaux, etc.).", vulgarisation: "Expliquer les différences entre acheter dans un vrai magasin du coin (commerce traditionnel) et sur Amazon (e-commerce) en comparant la pollution des livraisons, le prix et les emplois locaux." },
                     { id: 'es-sf2', description: "Exemplifier des pratiques de consommation collaborative et d’e-commerce différentes.", vulgarisation: "Donner des exemples d'achats en ligne modernes (ex: Amazon, Vinted pour l'occasion, BlaBlaCar pour le covoiturage)." },
-                    { id: 'es-sf3', description: "Comparer les fonctions de l’agent économique « ménages » sur le marché traditionnel et le marché collaboratif.", vulgarisation: "Expliquer que dans un marché collaboratif (ex: Vinted), un simple particulier (le ménage) peut à la fois être un acheteur mais aussi devenir le vendeur, alors que dans le commerce classique il n'est qu'acheteur." },
+                    { id: 'es-sf3', description: "Comparer les fonctions de l’agent économique « ménages » sur le marché traditionnel et le marché collaboratif.", vulgarisation: "Expliquer que dans un marché collaboratif (ex: Vinted), un simple particulier (le ménage) peut à la fois être un acheteur mais aussi de venir le vendeur, alors que dans le commerce classique il n'est qu'acheteur." },
                     { id: 'es-sf4', description: "Comparer différentes manières de « se mettre en scène » sur les réseaux sociaux.", vulgarisation: "Analyser deux comptes d'adolescents fictifs et repérer les techniques utilisées pour se donner du style ou de l'importance (filtres esthétiques, photos de vacances, mise en valeur d'objets chers)." },
                     { id: 'es-sf5', description: "Questionner la capacité et la possibilité pour tout individu de participer à des échanges économiques et sociaux dans l’espace numérique (ex. : en termes de fracture numérique) et certains de leur(s) impact(s).", vulgarisation: "Réfléchir au fait que tout le monde n'a pas un smartphone récent, une bonne connexion internet ou un compte bancaire (la fracture numérique) et expliquer les difficultés que cela crée pour eux." }
                 ],
@@ -696,45 +707,38 @@
             return null;
         }
 
-        // --- INITIALISATION FIREBASE CLASSIQUE (RÈGLE 1, 2, 3) ---
+        // --- INITIALISATION FIREBASE RÉELLE (RÈGLE 1, 2, 3) ---
         function initialiserFirebaseEtCharger() {
             appId = typeof __app_id !== 'undefined' ? __app_id : defaultAppId;
             
             try {
-                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-                    const firebaseConfig = JSON.parse(__firebase_config);
-                    firebase.initializeApp(firebaseConfig);
-                    auth = firebase.auth();
-                    db = firebase.firestore();
+                // Utilisation directe des clés Firebase réelles de l'établissement
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.firestore();
 
-                    const initAuth = async () => {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await auth.signInWithCustomToken(__initial_auth_token);
-                        } else {
-                            await auth.signInAnonymously();
+                const initAuth = async () => {
+                    // Authentification anonyme systématique et robuste
+                    await auth.signInAnonymously();
+                };
+
+                initAuth().then(() => {
+                    auth.onAuthStateChanged(async (user) => {
+                        if (user) {
+                            currentUser = user;
+                            await ecouterMesDonneesPermanentes();
+                            ecouterListeElevesEnseignant();
                         }
-                    };
-
-                    initAuth().then(() => {
-                        auth.onAuthStateChanged(async (user) => {
-                            if (user) {
-                                currentUser = user;
-                                await ecouterMesDonneesPermanentes();
-                                ecouterListeElevesEnseignant();
-                            }
-                            window.renderFiltresMatieres();
-                            window.selectionnerCategorie(window.appState.categorieActive);
-                        });
-                    }).catch(err => {
-                        console.warn("Échec auth, bascule en local autonome.");
-                        basculerLocal();
+                        window.renderFiltresMatieres();
+                        window.selectionnerCategorie(window.appState.categorieActive);
                     });
-
-                } else {
+                }).catch(err => {
+                    console.warn("Échec d'authentification Firebase, bascule locale passive.", err);
                     basculerLocal();
-                }
+                });
+
             } catch (error) {
-                console.warn("Firebase non disponible, bascule locale passive.");
+                console.warn("Firebase n'a pas pu s'initialiser, bascule locale passive.", error);
                 basculerLocal();
             }
         }
@@ -767,7 +771,7 @@
         };
 
         window.enregistrerCommentaireGeneral = function(texte) {
-            window.appState.commentaireGeneral = text = texte;
+            window.appState.commentaireGeneral = texte;
             
             if (window.currentSelectedStudentId) {
                 if (window.currentSelectedStudentId === "simulation-local-id") {
@@ -822,7 +826,7 @@
             try {
                 const docRef = db.doc('artifacts/' + appId + '/public/data/evaluations/' + currentUser.uid);
                 await docRef.set(paquet, { merge: true });
-                window.lancerNotification("Sauvegarde effectuée.");
+                window.lancerNotification("Sauvegarde en ligne synchronisée.");
             } catch (e) {
                 localStorage.setItem('ar_binche_evaluation_locale_v2', JSON.stringify(paquet));
             }
@@ -877,7 +881,7 @@
         window.marquerCommeTermine = function() {
             window.sauvegarderIdentite();
             if (!window.appState.identite.nom || !window.appState.identite.prenom) {
-                alert("Veuillez saisir votre nom et prénom en haut de page. ✍️");
+                window.lancerNotification("Veuillez d'abord inscrire votre nom et votre prénom tout en haut ! ✍️");
                 return;
             }
 
@@ -963,7 +967,7 @@
             if (modal) modal.classList.add('hidden');
         };
 
-        // --- NAVIGATION GUIDÉE ET FLUIDE VERS UN CRITÈRE MANQUANT ---
+        // --- NAVIGATION GUIDÉE VERS UN CRITÈRE MANQUANT ---
         window.allerAItem = function(matiereId, categorie, itemId) {
             window.fermerChecklistModal();
             window.appState.matiereActive = matiereId;
@@ -1018,7 +1022,7 @@
                 window.chargerIdentiteVisuelle();
                 window.renderCartesCompetences();
                 window.renderDiagnosticGlobal();
-                window.lancerNotification(`Copie chargée.`);
+                window.lancerNotification(`Copie de test chargée.`);
                 
                 const btnWord = document.getElementById('btn-export-word');
                 if(btnWord) {
@@ -1293,7 +1297,7 @@
         // --- ALGORITHME D'ANALYSE ET DE GÉNÉRATION DU BILAN GLOBAL D'APPRENTISSAGE ---
         window.genererBilanAutomatique = function() {
             if (!window.currentSelectedStudentId) {
-                alert("Veuillez sélectionner une copie.");
+                window.lancerNotification("Veuillez sélectionner une copie d'élève à évaluer.");
                 return;
             }
 
@@ -1350,7 +1354,7 @@
             }
 
             if (totalEvalues === 0) {
-                alert("Aucune évaluation disponible pour l'analyse.");
+                window.lancerNotification("Aucune évaluation disponible pour synthétiser un rapport.");
                 return;
             }
 
@@ -1410,7 +1414,7 @@
         // --- ENSEIGNANT : MODULES D'EXPRESSION ET D'EXPORTATION ---
         window.exporterExcelCSV = function() {
             if (Object.keys(cacheListeEleves).length === 0) {
-                alert("Aucune fiche élève enregistrée.");
+                window.lancerNotification("Aucune fiche élève enregistrée pour le moment.");
                 return;
             }
 
@@ -1465,12 +1469,12 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            window.lancerNotification("Rapport exporté.");
+            window.lancerNotification("Rapport de classe exporté.");
         };
 
         window.exporterWordDoc = function() {
             if (!window.currentSelectedStudentId) {
-                alert("Veuillez d'abord charger un élève.");
+                window.lancerNotification("Veuillez sélectionner un élève dans la liste avant de générer le fichier Word.");
                 return;
             }
 
@@ -1887,7 +1891,7 @@
             const eleveLvl = currentItemEval.eleveEval;
 
             if (!eleveLvl) {
-                alert("L'élève n'a pas autoévalué cet attendu.");
+                window.lancerNotification("L'élève n'a pas encore autoévalué cet attendu.");
                 document.getElementById('sidebar-agreement-select').value = "";
                 return;
             }
